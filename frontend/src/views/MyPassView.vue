@@ -357,6 +357,7 @@ onMounted(() => {
 .section-title {
   font-size: 17px;
   font-weight: 800;
+  color: rgb(111, 148, 250);
   margin-bottom: 14px;
 }
 

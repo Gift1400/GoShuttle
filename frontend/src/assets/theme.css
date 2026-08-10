@@ -27,7 +27,8 @@
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-strong: rgba(255, 255, 255, 0.78);
   --glass-border: rgba(255, 255, 255, 0.65);
-  --glass-shadow: 0 8px 30px rgba(14, 34, 70, 0.1), 0 2px 8px rgba(14, 34, 70, 0.06);
+  --glass-shadow:
+    0 8px 30px rgba(14, 34, 70, 0.1), 0 2px 8px rgba(14, 34, 70, 0.06);
   --glass-blur: 18px;
 
   /* Header */
@@ -55,16 +56,37 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 {
+h1 {
   margin: 0;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: #1b2a52;
+}
+h2 {
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: rgb(255, 255, 255);
+  font-size: 28px;
+  font-weight: 500;
+}
+h3,
+h4 {
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: white;
 }
 
 p {
@@ -87,7 +109,8 @@ ul {
   list-style: none;
 }
 
-img, svg {
+img,
+svg {
   display: block;
 }
 
@@ -150,7 +173,7 @@ img, svg {
 /* ---------- Glassmorphism ---------- */
 
 .glass {
-  background: var(--glass-bg);
+  background: rgba(0, 0, 0, 0.448);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--glass-shadow);
@@ -180,7 +203,10 @@ img, svg {
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+  transition:
+    transform 0.15s var(--ease),
+    box-shadow 0.15s var(--ease),
+    background 0.15s var(--ease);
 }
 
 .btn:active {
@@ -188,7 +214,7 @@ img, svg {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--navy-700), var(--navy-800));
+  background: rgba(0, 0, 0, 0.793);
   color: #fff;
   box-shadow: 0 8px 20px -8px rgba(20, 44, 86, 0.55);
 }
@@ -219,9 +245,15 @@ img, svg {
   color: #fff;
 }
 
-.badge-g1 { background: var(--navy-700); }
-.badge-g2 { background: var(--green-600); }
-.badge-g3 { background: #6b5bd6; }
+.badge-g1 {
+  background: var(--navy-700);
+}
+.badge-g2 {
+  background: var(--green-600);
+}
+.badge-g3 {
+  background: #6b5bd6;
+}
 
 /* ---------- Section heading ---------- */
 
@@ -231,7 +263,7 @@ img, svg {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--green-600);
+  color: #223a7a;
   margin-bottom: 10px;
 }
 
@@ -239,7 +271,9 @@ img, svg {
 
 .route-fade-enter-active,
 .route-fade-leave-active {
-  transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+  transition:
+    opacity 0.22s var(--ease),
+    transform 0.22s var(--ease);
 }
 .route-fade-enter-from {
   opacity: 0;

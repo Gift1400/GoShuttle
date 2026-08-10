@@ -4,7 +4,7 @@
 
       <!-- Hero -->
       <section class="hero">
-        <span class="section-eyebrow">GoShuttle</span>
+        <span id="section-eyebrow">GoShuttle</span>
         <h1>Good morning, Samu</h1>
         <p class="hero-sub">Track your bus, check schedules and manage your pass — all in one place.</p>
         <div class="hero-actions">
@@ -46,12 +46,7 @@
       <section class="upcoming">
         <h2 class="section-title">Upcoming buses</h2>
         <div class="bus-grid">
-          <router-link
-            v-for="bus in upcomingBuses"
-            :key="bus.code"
-            to="/schedule"
-            class="glass bus-card"
-          >
+          <router-link v-for="bus in upcomingBuses" :key="bus.code" to="/schedule" class="glass bus-card">
             <span class="badge" :class="bus.badgeClass">{{ bus.code }}</span>
             <div class="bus-card-body">
               <h3>{{ bus.title }}</h3>
@@ -104,8 +99,17 @@ const upcomingBuses = [
   margin-bottom: 32px;
 }
 
+#section-eyebrow {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green-600);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
 .hero h1 {
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 800;
   margin: 4px 0 10px;
 }
@@ -139,10 +143,10 @@ const upcomingBuses = [
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(23, 160, 79, 0.12);
-  color: var(--green-700);
+  background: rgba(19, 217, 48, 0.391);
+  color: rgb(0, 255, 0);
   font-size: 11.5px;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.05em;
   padding: 6px 12px;
   border-radius: var(--radius-full);
@@ -152,19 +156,28 @@ const upcomingBuses = [
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--green-500);
+  background: rgb(0, 255, 0);
   animation: pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.3); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
+  }
 }
 
 .live-link {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--navy-700);
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
 }
 
 .live-link:hover {
@@ -179,7 +192,7 @@ const upcomingBuses = [
 
 .next-stop {
   font-size: 14px;
-  color: var(--muted);
+  color: white;
   margin-bottom: 22px;
 }
 
@@ -187,7 +200,7 @@ const upcomingBuses = [
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid white;
   padding-top: 18px;
 }
 
@@ -199,17 +212,17 @@ const upcomingBuses = [
 
 .live-stat-label {
   font-size: 12px;
-  color: var(--muted);
+  color: white;
 }
 
 .live-stat-value {
   font-size: 16px;
   font-weight: 700;
-  color: var(--ink);
+  color: rgb(9, 72, 145);
 }
 
 .status-on-time {
-  color: var(--green-600);
+  color: rgb(6, 208, 6);
 }
 
 /* Upcoming */
@@ -217,6 +230,7 @@ const upcomingBuses = [
   font-size: 20px;
   font-weight: 800;
   margin-bottom: 16px;
+  color: white;
 }
 
 .bus-grid {
@@ -253,7 +267,7 @@ const upcomingBuses = [
 
 .bus-card-body p {
   font-size: 12.5px;
-  color: var(--muted);
+  color: white;
   margin-bottom: 10px;
 }
 
@@ -273,11 +287,11 @@ const upcomingBuses = [
 }
 
 .bus-status.on-time {
-  color: var(--green-600);
+  color: rgb(13, 208, 13);
 }
 
 .bus-status.delayed {
-  color: #a15c0f;
+  color: #ec9411;
 }
 
 @media (max-width: 560px) {

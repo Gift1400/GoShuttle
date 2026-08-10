@@ -3,11 +3,7 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <span class="brand-mark">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="5" width="16" height="12" rx="2.2" />
-            <line x1="4" y1="11" x2="20" y2="11" />
-          </svg>
+          <img src="../assets/images/logo.jpeg" id="footer-logo" alt="GoShuttle Logo" />
         </span>
         <span>GoShuttle</span>
       </div>
@@ -24,7 +20,7 @@ const year = new Date().getFullYear()
 <style scoped>
 .site-footer {
   border-top: 1px solid var(--divider);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgb(0, 0, 0);
 
 }
 
@@ -43,13 +39,13 @@ const year = new Date().getFullYear()
   align-items: center;
   gap: 8px;
   font-weight: 800;
-  color: var(--navy-800);
+  color: white;
   font-size: 15px;
 }
 
 .brand-mark {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -57,15 +53,21 @@ const year = new Date().getFullYear()
   background: linear-gradient(135deg, var(--navy-700), var(--green-600));
 }
 
+#footer-logo {
+  width: 40px;
+  height: 36px;
+  border-radius: 8px;
+}
+
 .footer-note {
   font-size: 13.5px;
-  color: var(--muted);
+  color: white;
   max-width: 440px;
 }
 
 .footer-copy {
   font-size: 12.5px;
-  color: var(--muted);
+  color: white;
   opacity: 0.8;
 }
 </style>

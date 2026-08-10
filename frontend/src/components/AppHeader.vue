@@ -83,7 +83,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
   flex-shrink: 0;
 }
 
@@ -99,7 +99,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 
 #logo {
-  width: 42px;
+  width: 44px;
   height: 40px;
   border-radius: 10px;
 }
@@ -177,9 +177,9 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 
 .menu-toggle span {
-  height: 2px;
+  height: 2.5px;
   border-radius: 2px;
-  background: var(--navy-800);
+  background: white;
   transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
 }
 

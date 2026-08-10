@@ -14,18 +14,15 @@
         <section class="glass progress-card">
           <h2 class="card-title">Route progress</h2>
           <ol class="progress-track">
-            <li
-              v-for="(stop, i) in bus.stops"
-              :key="stop.name"
-              class="progress-stop"
-              :class="{ passed: i < currentIndex, active: i === currentIndex }"
-            >
+            <li v-for="(stop, i) in bus.stops" :key="stop.name" class="progress-stop"
+              :class="{ passed: i < currentIndex, active: i === currentIndex }">
               <span class="progress-node">
-                <svg v-if="i === currentIndex" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="7" width="15" height="10" rx="2"/>
-                  <path d="M18 10h2.5a1.5 1.5 0 0 1 1.34.83L23 13v4h-2"/>
-                  <circle cx="7.5" cy="18.5" r="1.4"/>
-                  <circle cx="17.5" cy="18.5" r="1.4"/>
+                <svg v-if="i === currentIndex" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="7" width="15" height="10" rx="2" />
+                  <path d="M18 10h2.5a1.5 1.5 0 0 1 1.34.83L23 13v4h-2" />
+                  <circle cx="7.5" cy="18.5" r="1.4" />
+                  <circle cx="17.5" cy="18.5" r="1.4" />
                 </svg>
               </span>
               <span class="progress-label">
@@ -141,8 +138,17 @@ const currentIndex = computed(() => 1)
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.3); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
+  }
 }
 
 .track-grid {
@@ -264,7 +270,7 @@ const currentIndex = computed(() => 1)
 }
 
 .status-on-time {
-  color: var(--green-600);
+  color: rgb(0, 208, 38);
 }
 
 .capacity-block {
