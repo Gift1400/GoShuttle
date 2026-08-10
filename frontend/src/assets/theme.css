@@ -1,0 +1,267 @@
+/* ==========================================================================
+   GoShuttle — Design Tokens & Base Styles
+   Palette carried over from the existing GoShuttle screens (navy + green),
+   refined for a website layout rather than an app-frame layout.
+   ========================================================================== */
+
+:root {
+  /* Brand */
+  --navy-900: #0e2246;
+  --navy-800: #142c56;
+  --navy-700: #1b3b73;
+  --navy-600: #223a7a;
+  --green-700: #17603f;
+  --green-600: #1c8c68;
+  --green-500: #17a04f;
+  --green-400: #2fb972;
+
+  /* Surfaces */
+  --bg: #eef1f6;
+  --bg-alt: #e6eaf3;
+  --ink: #17223f;
+  --ink-soft: #3c465e;
+  --muted: #7b8496;
+  --divider: rgba(23, 34, 63, 0.08);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-shadow: 0 8px 30px rgba(14, 34, 70, 0.1), 0 2px 8px rgba(14, 34, 70, 0.06);
+  --glass-blur: 18px;
+
+  /* Header */
+  --header-bg: rgba(255, 255, 255, 0.55);
+  --header-blur: 22px;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img, svg {
+  display: block;
+}
+
+/* ---------- Layout helpers ---------- */
+
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.page {
+  min-height: calc(100vh - 72px - 220px);
+  padding: 56px 0 96px;
+}
+
+/* ---------- Ambient background blobs (give glass panels something to blur) ---------- */
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.ambient-bg span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+}
+
+.ambient-bg .blob-1 {
+  width: 460px;
+  height: 460px;
+  top: -140px;
+  left: -120px;
+  background: var(--navy-700);
+}
+
+.ambient-bg .blob-2 {
+  width: 380px;
+  height: 380px;
+  top: 220px;
+  right: -140px;
+  background: var(--green-500);
+}
+
+.ambient-bg .blob-3 {
+  width: 320px;
+  height: 320px;
+  bottom: -120px;
+  left: 30%;
+  background: var(--navy-600);
+  opacity: 0.22;
+}
+
+/* ---------- Glassmorphism ---------- */
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 22px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--navy-700), var(--navy-800));
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(20, 44, 86, 0.55);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 26px -8px rgba(20, 44, 86, 0.6);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--navy-800);
+  border: 1px solid rgba(23, 34, 63, 0.12);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Badges ---------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #fff;
+}
+
+.badge-g1 { background: var(--navy-700); }
+.badge-g2 { background: var(--green-600); }
+.badge-g3 { background: #6b5bd6; }
+
+/* ---------- Section heading ---------- */
+
+.section-eyebrow {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green-600);
+  margin-bottom: 10px;
+}
+
+/* ---------- Shared page-enter transition ---------- */
+
+.route-fade-enter-active,
+.route-fade-leave-active {
+  transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+}
+.route-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.route-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* ---------- Scrollbar (subtle) ---------- */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(23, 34, 63, 0.18);
+  border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 18px;
+  }
+}
