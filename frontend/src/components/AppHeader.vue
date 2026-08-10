@@ -3,26 +3,13 @@
     <div class="container header-inner">
       <router-link to="/" class="brand" @click="closeMenu">
         <span class="brand-mark">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="5" width="16" height="12" rx="2.2"/>
-            <line x1="4" y1="11" x2="20" y2="11"/>
-            <line x1="8" y1="5" x2="8" y2="11"/>
-            <line x1="16" y1="5" x2="16" y2="11"/>
-            <circle cx="7.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-            <circle cx="16.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-          </svg>
+          <img src="../assets/images/logo.jpeg" id="logo" alt="GoShuttle Logo" />
         </span>
         <span class="brand-name">GoShuttle</span>
       </router-link>
 
       <nav class="primary-nav" :class="{ open: menuOpen }">
-        <router-link
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          class="nav-link"
-          @click="closeMenu"
-        >
+        <router-link v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-link" @click="closeMenu">
           {{ link.label }}
         </router-link>
 
@@ -32,13 +19,8 @@
         </div>
       </nav>
 
-      <button
-        class="menu-toggle"
-        :class="{ open: menuOpen }"
-        aria-label="Toggle navigation menu"
-        :aria-expanded="menuOpen"
-        @click="menuOpen = !menuOpen"
-      >
+      <button class="menu-toggle" :class="{ open: menuOpen }" aria-label="Toggle navigation menu"
+        :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
         <span></span>
         <span></span>
         <span></span>
@@ -78,7 +60,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--header-bg);
+  background: black;
   backdrop-filter: blur(var(--header-blur)) saturate(160%);
   -webkit-backdrop-filter: blur(var(--header-blur)) saturate(160%);
   border-bottom: 1px solid rgba(23, 34, 63, 0.06);
@@ -112,8 +94,14 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--navy-700), var(--green-600));
+  border: 0.2px solid white;
   box-shadow: 0 6px 14px -6px rgba(20, 44, 86, 0.5);
+}
+
+#logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
 }
 
 .brand-name {
@@ -195,9 +183,17 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
 }
 
-.menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.menu-toggle.open span:nth-child(2) { opacity: 0; }
-.menu-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.menu-toggle.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
 
 @media (max-width: 860px) {
   .menu-toggle {
