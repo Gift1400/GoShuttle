@@ -60,7 +60,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   position: sticky;
   top: 0;
   z-index: 50;
-  background: black;
+  background: rgba(0, 0, 0, 0.574);
   backdrop-filter: blur(var(--header-blur)) saturate(160%);
   -webkit-backdrop-filter: blur(var(--header-blur)) saturate(160%);
   border-bottom: 1px solid rgba(23, 34, 63, 0.06);
@@ -69,7 +69,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 
 .site-header.scrolled {
   box-shadow: 0 8px 24px rgba(14, 34, 70, 0.08);
-  background: var(--glass-bg-strong);
+  background: rgba(0, 0, 0, 0.445);
 }
 
 .header-inner {
@@ -99,15 +99,15 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 
 #logo {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 40px;
   border-radius: 10px;
 }
 
 .brand-name {
   font-size: 18px;
   font-weight: 800;
-  color: var(--navy-800);
+  color: white;
   letter-spacing: -0.01em;
 }
 
@@ -124,18 +124,18 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   padding: 9px 14px;
   font-size: 14.5px;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: white;
   border-radius: var(--radius-sm);
   transition: color 0.15s ease, background 0.15s ease;
 }
 
 .nav-link:hover {
-  color: var(--navy-800);
-  background: rgba(23, 34, 63, 0.05);
+  color: white;
+  background: rgba(60, 90, 172, 0.441);
 }
 
 .nav-link.router-link-active {
-  color: var(--navy-800);
+  color: rgb(244, 244, 248);
 }
 
 .nav-link.router-link-active::after {
@@ -146,7 +146,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   bottom: 3px;
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--navy-700), var(--green-500));
+  background: rgb(100, 100, 215);
 }
 
 .nav-actions {
@@ -188,7 +188,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 
 .menu-toggle.open span:nth-child(2) {
-  opacity: 0;
+  opacity: 2;
 }
 
 .menu-toggle.open span:nth-child(3) {
@@ -209,8 +209,8 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
     align-items: stretch;
     gap: 4px;
     padding: 14px 18px 20px;
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(var(--header-blur)) saturate(160%);
+    background: black;
+
     border-bottom: 1px solid rgba(23, 34, 63, 0.08);
     box-shadow: 0 16px 30px rgba(14, 34, 70, 0.1);
 
@@ -218,13 +218,14 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    transition: max-height 0.25s var(--ease), opacity 0.2s ease;
+    transition: max-height 0.25s black, opacity 0.2s ease;
   }
 
   .primary-nav.open {
     max-height: 420px;
     opacity: 1;
     pointer-events: auto;
+    color: blue;
   }
 
   .nav-link {

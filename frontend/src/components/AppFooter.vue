@@ -3,9 +3,10 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <span class="brand-mark">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="5" width="16" height="12" rx="2.2"/>
-            <line x1="4" y1="11" x2="20" y2="11"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="5" width="16" height="12" rx="2.2" />
+            <line x1="4" y1="11" x2="20" y2="11" />
           </svg>
         </span>
         <span>GoShuttle</span>
@@ -23,8 +24,8 @@ const year = new Date().getFullYear()
 <style scoped>
 .site-footer {
   border-top: 1px solid var(--divider);
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.4);
+
 }
 
 .footer-inner {
@@ -34,6 +35,7 @@ const year = new Date().getFullYear()
   align-items: center;
   gap: 8px;
   text-align: center;
+  color: white;
 }
 
 .footer-brand {
