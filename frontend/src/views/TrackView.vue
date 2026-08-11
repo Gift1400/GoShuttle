@@ -99,12 +99,12 @@ const currentIndex = computed(() => 1)
   display: inline-block;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--muted);
+  color: white;
   margin-bottom: 14px;
 }
 
 .back-link:hover {
-  color: var(--navy-800);
+  color: #6B7280;
 }
 
 .page-head h1 {
@@ -113,13 +113,14 @@ const currentIndex = computed(() => 1)
   gap: 12px;
   font-size: 30px;
   font-weight: 800;
+  color: white;
 }
 
 .live-pill {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(23, 160, 79, 0.12);
+  background: rgba(9, 254, 46, 0.63);
   color: var(--green-700);
   font-size: 11.5px;
   font-weight: 800;
@@ -159,9 +160,9 @@ const currentIndex = computed(() => 1)
 }
 
 .card-title {
-  font-size: 15px;
-  font-weight: 800;
-  margin-bottom: 22px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
 }
 
 .progress-card,
@@ -182,11 +183,11 @@ const currentIndex = computed(() => 1)
 .progress-track::before {
   content: '';
   position: absolute;
-  left: 15px;
+  left: 20px;
   top: 18px;
   bottom: 18px;
-  width: 2px;
-  background: var(--divider);
+  width: 1.5px;
+  background: white;
 }
 
 .progress-stop {
@@ -226,17 +227,17 @@ const currentIndex = computed(() => 1)
 .progress-name {
   font-weight: 700;
   font-size: 14.5px;
-  color: var(--ink);
+  color: white;
 }
 
 .progress-stop.active .progress-name {
-  color: var(--navy-800);
+  color: rgb(0, 255, 8);
 }
 
 .progress-time {
   display: block;
   font-size: 12px;
-  color: var(--muted);
+  color: #0e2246;
   margin-top: 2px;
 }
 
@@ -250,8 +251,8 @@ const currentIndex = computed(() => 1)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--divider);
+  padding: 10px 0;
+  border-bottom: 1px solid #ffffff52;
 }
 
 .info-row:last-of-type {
@@ -259,18 +260,18 @@ const currentIndex = computed(() => 1)
 }
 
 .info-label {
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 15px;
+  color: white;
 }
 
 .info-value {
   font-size: 14px;
   font-weight: 700;
-  color: var(--ink);
+  color: white;
 }
 
 .status-on-time {
-  color: rgb(0, 208, 38);
+  color: rgb(5, 255, 18);
 }
 
 .capacity-block {
@@ -286,14 +287,14 @@ const currentIndex = computed(() => 1)
 .capacity-bar {
   height: 8px;
   border-radius: 999px;
-  background: rgba(23, 34, 63, 0.08);
+  background: #17223f87;
   overflow: hidden;
 }
 
 .capacity-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--navy-700), var(--green-500));
+  background: linear-gradient(90deg, rgb(255, 255, 255), rgb(64, 255, 6));
   transition: width 0.6s var(--ease);
 }
 

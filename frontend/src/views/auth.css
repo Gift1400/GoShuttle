@@ -11,7 +11,12 @@
 }
 
 .auth-hero {
-  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 55%, var(--green-600) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--navy-900) 0%,
+    var(--navy-700) 55%,
+    var(--green-600) 100%
+  );
   padding: 36px 32px 30px;
   text-align: center;
   color: #fff;
@@ -64,7 +69,9 @@
   border: 1px solid rgba(23, 34, 63, 0.12);
   border-radius: var(--radius-sm);
   padding: 0 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .input-wrap:focus-within {
@@ -149,7 +156,7 @@
 
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: rgba(23, 34, 63, 0.1);
@@ -195,7 +202,7 @@
   margin-bottom: 8px;
 }
 
-.checkbox-row input[type='checkbox'] {
+.checkbox-row input[type="checkbox"] {
   width: 18px;
   height: 18px;
   accent-color: var(--navy-700);
@@ -226,7 +233,9 @@
 
 .auth-toast-fade-enter-active,
 .auth-toast-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .auth-toast-fade-enter-from,
 .auth-toast-fade-leave-to {

@@ -102,7 +102,7 @@ const upcomingBuses = [
 #section-eyebrow {
   font-size: 20px;
   font-weight: 700;
-  color: var(--green-600);
+  color: white;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 6px;
@@ -144,7 +144,7 @@ const upcomingBuses = [
   align-items: center;
   gap: 7px;
   background: rgba(19, 217, 48, 0.391);
-  color: rgb(0, 255, 0);
+  color: #77ff3e;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -212,13 +212,13 @@ const upcomingBuses = [
 
 .live-stat-label {
   font-size: 12px;
-  color: white;
+  color: rgb(254, 254, 254);
 }
 
 .live-stat-value {
   font-size: 16px;
   font-weight: 700;
-  color: rgb(9, 72, 145);
+  color:  #22d369 ;
 }
 
 .status-on-time {

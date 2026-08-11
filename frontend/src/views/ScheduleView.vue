@@ -14,25 +14,16 @@
 
       <!-- Search + filter -->
       <section class="glass search-panel">
-        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input
-          v-model="query"
-          type="text"
-          class="search-input"
-          placeholder="Search a route, stop or area…"
-          autocomplete="off"
-        />
+        <input v-model="query" type="text" class="search-input" placeholder="Search a route, stop or area…"
+          autocomplete="off" />
         <div class="status-filters">
-          <button
-            v-for="s in statusOptions"
-            :key="s.value"
-            class="status-chip"
-            :class="{ active: activeStatus === s.value }"
-            @click="activeStatus = s.value"
-          >
+          <button v-for="s in statusOptions" :key="s.value" class="status-chip"
+            :class="{ active: activeStatus === s.value }" @click="activeStatus = s.value">
             {{ s.label }}
           </button>
         </div>
@@ -41,17 +32,9 @@
       <!-- Route schedule cards -->
       <section class="routes-list">
         <transition-group name="card-fade">
-          <article
-            v-for="route in filteredRoutes"
-            :key="route.id"
-            class="glass route-card"
-            :class="{ collapsed: !openRoutes[route.id] }"
-          >
-            <button
-              class="route-header"
-              :aria-expanded="!!openRoutes[route.id]"
-              @click="toggleRoute(route.id)"
-            >
+          <article v-for="route in filteredRoutes" :key="route.id" class="glass route-card"
+            :class="{ collapsed: !openRoutes[route.id] }">
+            <button class="route-header" :aria-expanded="!!openRoutes[route.id]" @click="toggleRoute(route.id)">
               <span class="badge" :class="route.badgeClass">{{ route.code }}</span>
 
               <span class="route-header-text">
@@ -66,7 +49,8 @@
                 {{ route.status === 'on-time' ? 'On Time' : 'Delayed' }}
               </span>
 
-              <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
@@ -305,13 +289,13 @@ const filteredRoutes = computed(() => {
 
 .route-title {
   font-weight: 700;
-  font-size: 16px;
-  color: var(--ink);
+  font-size: 18px;
+  color: white;
 }
 
 .route-meta {
-  font-size: 12.5px;
-  color: var(--muted);
+  font-size: 13px;
+  color: white;
 }
 
 .status-pill {
@@ -328,8 +312,8 @@ const filteredRoutes = computed(() => {
 }
 
 .status-pill.on-time {
-  background: rgba(23, 160, 79, 0.12);
-  color: var(--green-700);
+  background: rgba(9, 157, 9, 0.462);
+  color: rgb(45, 249, 45);
 }
 
 .status-pill.delayed {
@@ -380,19 +364,19 @@ const filteredRoutes = computed(() => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--muted);
+  color: white;
   margin-bottom: 10px;
 }
 
 .chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .time-chip {
-  background: rgba(27, 59, 115, 0.07);
-  color: var(--navy-800);
+  background: rgba(29, 67, 134, 0.526);
+  color: rgb(252, 252, 254);
   font-weight: 700;
   font-size: 13px;
   padding: 6px 12px;
@@ -461,13 +445,13 @@ const filteredRoutes = computed(() => {
 .stop-name {
   font-weight: 600;
   font-size: 14px;
-  color: var(--ink);
+  color: white;
 }
 
 .stop-sub {
   display: block;
   font-size: 12px;
-  color: var(--muted);
+  color: rgb(191, 189, 189);
   margin-top: 2px;
 }
 
@@ -482,8 +466,8 @@ const filteredRoutes = computed(() => {
 
 .stop-time {
   font-size: 12.5px;
-  font-weight: 700;
-  color: var(--green-600);
+  font-weight: 500;
+  color: white;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -500,6 +484,7 @@ const filteredRoutes = computed(() => {
 .card-fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 .card-fade-enter-from,
 .card-fade-leave-to {
   opacity: 0;
@@ -510,6 +495,7 @@ const filteredRoutes = computed(() => {
   .route-header {
     flex-wrap: wrap;
   }
+
   .status-pill {
     order: 3;
   }

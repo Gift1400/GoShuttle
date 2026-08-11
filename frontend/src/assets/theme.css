@@ -16,7 +16,7 @@
   --green-400: #2fb972;
 
   /* Surfaces */
-  --bg: #eef1f6;
+  --bg: #aaafb7;
   --bg-alt: #e6eaf3;
   --ink: #17223f;
   --ink-soft: #3c465e;
@@ -28,7 +28,7 @@
   --glass-bg-strong: rgba(255, 255, 255, 0.78);
   --glass-border: rgba(255, 255, 255, 0.65);
   --glass-shadow:
-    0 8px 30px rgba(14, 34, 70, 0.1), 0 2px 8px rgba(14, 34, 70, 0.06);
+    0 8px 30px rgba(14, 34, 70, 0.194), 0 2px 8px rgba(14, 34, 70, 0.06);
   --glass-blur: 18px;
 
   /* Header */
@@ -246,10 +246,10 @@ svg {
 }
 
 .badge-g1 {
-  background: var(--navy-700);
+  background: rgb(0, 49, 155);
 }
 .badge-g2 {
-  background: var(--green-600);
+  background: rgb(0, 255, 110);
 }
 .badge-g3 {
   background: #6b5bd6;
@@ -258,8 +258,8 @@ svg {
 /* ---------- Section heading ---------- */
 
 .section-eyebrow {
-  display: inline-block;
-  font-size: 12.5px;
+  display: block;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
