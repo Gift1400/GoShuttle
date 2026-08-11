@@ -65,7 +65,7 @@ body {
     Helvetica,
     Arial,
     sans-serif;
-  color: var(--ink);
+  color: white;
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
@@ -91,7 +91,7 @@ h4 {
 
 p {
   margin: 0;
-  color: var(--ink-soft);
+  color: white;
 }
 
 a {

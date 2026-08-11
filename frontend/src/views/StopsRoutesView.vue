@@ -149,8 +149,8 @@ const filteredRoutes = computed(() => {
 }
 
 .search-icon {
-  color: var(--muted);
-  flex-shrink: 0;
+  color: white;
+  flex-shrink: 2;
 }
 
 .search-input {
@@ -164,7 +164,7 @@ const filteredRoutes = computed(() => {
 }
 
 .search-input::placeholder {
-  color: var(--muted);
+  color: rgb(200, 200, 200);
 }
 
 .routes-list {
@@ -198,13 +198,13 @@ const filteredRoutes = computed(() => {
   display: block;
   font-weight: 700;
   font-size: 15.5px;
-  color: var(--ink);
+  color: white;
 }
 
 .route-meta {
   display: block;
   font-size: 12.5px;
-  color: var(--muted);
+  color: rgb(222, 222, 222);
   margin-top: 3px;
 }
 
@@ -238,11 +238,11 @@ const filteredRoutes = computed(() => {
 }
 
 .stop-item.selected {
-  background: rgba(27, 59, 115, 0.07);
+  background: rgba(137, 152, 179, 0.368);
 }
 
 .stop-item.selected .stop-name {
-  color: var(--navy-700);
+  color: rgba(11, 24, 67, 0.851);
 }
 
 .dot {
@@ -283,29 +283,29 @@ const filteredRoutes = computed(() => {
 .stop-name {
   font-weight: 600;
   font-size: 14px;
-  color: var(--ink);
+  color: white;
 }
 
 .stop-sub {
   display: block;
   font-size: 12px;
-  color: var(--muted);
+  color: rgb(218, 218, 218);
   margin-top: 2px;
 }
 
 .campus-badge {
   background: rgba(27, 59, 115, 0.1);
-  color: var(--navy-700);
+  color: rgb(19, 36, 135);
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 4px 10px;
   border-radius: 7px;
 }
 
 .stop-time {
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--green-600);
+  color: rgb(7, 218, 7);
   white-space: nowrap;
 }
 

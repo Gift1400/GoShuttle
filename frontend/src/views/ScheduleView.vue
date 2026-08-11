@@ -181,12 +181,14 @@ const filteredRoutes = computed(() => {
 .page-head {
   max-width: 640px;
   margin-bottom: 32px;
+  color:white;
 }
 
 .page-head h1 {
   font-size: 34px;
   font-weight: 800;
   margin-bottom: 10px;
+  color:white;
 }
 
 .page-sub {
@@ -205,8 +207,8 @@ const filteredRoutes = computed(() => {
 }
 
 .search-icon {
-  color: var(--muted);
-  flex-shrink: 0;
+  color: white;
+  flex-shrink: 2;
 }
 
 .search-input {
@@ -216,12 +218,12 @@ const filteredRoutes = computed(() => {
   outline: none;
   background: transparent;
   font-size: 15px;
-  color: var(--ink);
+  color: white;
   font-family: inherit;
 }
 
 .search-input::placeholder {
-  color: var(--muted);
+  color: white;
 }
 
 .status-filters {
@@ -231,10 +233,10 @@ const filteredRoutes = computed(() => {
 
 .status-chip {
   border: 1px solid rgba(23, 34, 63, 0.12);
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--ink-soft);
+  background: rgb(0 0 0 / 47%);
+  color: white;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 7px 14px;
   border-radius: var(--radius-full);
   cursor: pointer;
@@ -313,12 +315,12 @@ const filteredRoutes = computed(() => {
 
 .status-pill.on-time {
   background: rgba(9, 157, 9, 0.462);
-  color: rgb(45, 249, 45);
+  color: rgb(0, 255, 0);
 }
 
 .status-pill.delayed {
   background: rgba(210, 128, 20, 0.12);
-  color: #a15c0f;
+  color: #ffb30f;
 }
 
 .status-dot {
@@ -456,11 +458,11 @@ const filteredRoutes = computed(() => {
 }
 
 .campus-badge {
-  background: rgba(27, 59, 115, 0.1);
-  color: var(--navy-700);
+  background: rgba(24, 77, 168, 0.582);
+  color: white;
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
+  font-weight: 500;
+  padding: 4px 10px;
   border-radius: 7px;
 }
 
@@ -475,7 +477,7 @@ const filteredRoutes = computed(() => {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: var(--muted);
+  color: white;
   font-size: 14.5px;
 }
 
