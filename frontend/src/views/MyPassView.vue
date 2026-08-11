@@ -174,7 +174,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 22px;
-  max-width: 640px;
+  max-width: 800px;
 }
 
 /* Pass card */
@@ -333,8 +333,8 @@ onMounted(() => {
 .stat-icon {
   width: 36px;
   height: 36px;
-  background: rgba(23, 160, 79, 0.12);
-  color: var(--green-600);
+  background: rgba(23, 160, 80, 0.345);
+  color: rgb(15, 255, 151);
   border-radius: 11px;
   display: flex;
   align-items: center;
@@ -344,20 +344,20 @@ onMounted(() => {
 
 .stat-label {
   font-size: 12.5px;
-  color: var(--muted);
+  color: white;
 }
 
 .stat-value {
   font-size: 21px;
   font-weight: 800;
-  color: var(--ink);
+  color: white;
 }
 
 /* Steps */
 .section-title {
   font-size: 17px;
   font-weight: 800;
-  color: rgb(111, 148, 250);
+  color: rgb(21, 45, 110);
   margin-bottom: 14px;
 }
 
@@ -408,7 +408,7 @@ onMounted(() => {
 .step-title {
   font-size: 14.5px;
   font-weight: 700;
-  color: var(--ink);
+  color: white;
   transition: color 0.15s ease;
 }
 
@@ -419,7 +419,7 @@ onMounted(() => {
 
 .step-desc {
   font-size: 12.5px;
-  color: var(--muted);
+  color: rgb(213, 212, 212);
   line-height: 1.45;
   transition: opacity 0.15s ease;
 }

@@ -224,7 +224,7 @@ svg {
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(244, 241, 241, 0.885);
   color: var(--navy-800);
   border: 1px solid rgba(23, 34, 63, 0.12);
 }

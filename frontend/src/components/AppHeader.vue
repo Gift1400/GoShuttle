@@ -99,7 +99,7 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 }
 
 #logo {
-  width: 44px;
+  width: 48px;
   height: 40px;
   border-radius: 10px;
 }
