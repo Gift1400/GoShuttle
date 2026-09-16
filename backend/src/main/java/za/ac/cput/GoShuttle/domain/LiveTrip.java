@@ -1,133 +1,159 @@
 package za.ac.cput.GoShuttle.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import za.ac.cput.GoShuttle.util.Helper;
 
 import java.time.LocalDateTime;
-@Entity
-public class LiveTrip {
-    @Id
-    private Long tripID;
-    private Long busID;
-    private Long routeID;
-    private Long currentStopID;
-    private Helper.liveTripStatus status;
-    private int arrivesInMinute;
-    private int toCampusMinutes;
-    private LocalDateTime timeStamp;
 
-    public LiveTrip(){}
-    public LiveTrip(Builder builder){
-        this.routeID = builder.routeID;
+@Entity
+@Table(name = "live_trip")
+public class LiveTrip {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long tripID;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bus_id", nullable = false)
+    private Bus bus;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "route_id", nullable = false)
+    private Routes route;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_stop_id")
+    private RouteStops currentStop;
+
+    @Enumerated(EnumType.STRING)
+    private Helper.liveTripStatus status;
+
+    private int arrivesInMinutes;
+    private int toCampusMinutes;
+    private LocalDateTime timestamp;
+
+    protected LiveTrip() {}
+
+    public LiveTrip(Builder builder) {
         this.tripID = builder.tripID;
-        this.arrivesInMinute = builder.arrivesInMinute;
-        this.currentStopID = builder.currentStopID;
-        this.toCampusMinutes = builder.toCampusMinutes;
-        this.timeStamp = builder.timeStamp;
+        this.bus = builder.bus;
+        this.route = builder.route;
+        this.currentStop = builder.currentStop;
         this.status = builder.status;
-        this.busID = builder.busID;
+        this.arrivesInMinutes = builder.arrivesInMinutes;
+        this.toCampusMinutes = builder.toCampusMinutes;
+        this.timestamp = builder.timestamp;
     }
 
     public Long getTripID() {
         return tripID;
     }
 
-    public Long getBusID() {
-        return busID;
+    public Bus getBus() {
+        return bus;
     }
 
-    public Long getRouteID() {
-        return routeID;
+    public Routes getRoute() {
+        return route;
     }
 
-    public Long getCurrentStopID() {
-        return currentStopID;
+    public RouteStops getCurrentStop() {
+        return currentStop;
     }
 
     public Helper.liveTripStatus getStatus() {
         return status;
     }
 
-    public int getArrivesInMinute() {
-        return arrivesInMinute;
+    public int getArrivesInMinutes() {
+        return arrivesInMinutes;
     }
 
     public int getToCampusMinutes() {
         return toCampusMinutes;
     }
 
-    public LocalDateTime getTimeStamp() {
-        return timeStamp;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
     @Override
     public String toString() {
         return "LiveTrip{" +
                 "tripID=" + tripID +
-                ", busID=" + busID +
-                ", routeID=" + routeID +
-                ", currentStopID=" + currentStopID +
+                ", bus=" + bus +
+                ", route=" + route +
+                ", currentStop=" + currentStop +
                 ", status=" + status +
-                ", arrivesInMinute=" + arrivesInMinute +
+                ", arrivesInMinutes=" + arrivesInMinutes +
                 ", toCampusMinutes=" + toCampusMinutes +
-                ", timeStamp=" + timeStamp +
+                ", timestamp=" + timestamp +
                 '}';
     }
-    public static class Builder{
-        private Long tripID;
-        private Long busID;
-        private Long routeID;
-        private Long currentStopID;
-        private Helper.liveTripStatus status;
-        private int arrivesInMinute;
-        private int toCampusMinutes;
-        private LocalDateTime timeStamp;
 
-        public Builder setTripID(Long tripID){
+    public static class Builder {
+        private Long tripID;
+        private Bus bus;
+        private Routes route;
+        private RouteStops currentStop;
+        private Helper.liveTripStatus status;
+        private int arrivesInMinutes;
+        private int toCampusMinutes;
+        private LocalDateTime timestamp;
+
+        public Builder setTripID(Long tripID) {
             this.tripID = tripID;
             return this;
         }
-        public Builder setBusID(Long busID){
-            this.busID = busID;
+
+        public Builder setBus(Bus bus) {
+            this.bus = bus;
             return this;
         }
-        public Builder setRouteID(Long routeID){
-            this.routeID = routeID;
+
+        public Builder setRoute(Routes route) {
+            this.route = route;
             return this;
         }
-        public Builder setCurrentStopID(Long currentStopID){
-            this.currentStopID = currentStopID;
+
+        public Builder setCurrentStop(RouteStops currentStop) {
+            this.currentStop = currentStop;
             return this;
         }
-        public Builder setStatus(Helper.liveTripStatus status){
+
+        public Builder setStatus(Helper.liveTripStatus status) {
             this.status = status;
             return this;
         }
-        public Builder setSArrivesInMinute(int arrivesInMinute){
-            this.arrivesInMinute = arrivesInMinute;
+
+        public Builder setArrivesInMinutes(int arrivesInMinutes) {
+            this.arrivesInMinutes = arrivesInMinutes;
             return this;
         }
-        public Builder setToCampusMinutes(int toCampusMinutes){
+
+        public Builder setToCampusMinutes(int toCampusMinutes) {
             this.toCampusMinutes = toCampusMinutes;
             return this;
         }
-        public Builder setTimeStamp(LocalDateTime timeStamp){
-            this.timeStamp = timeStamp;
+
+        public Builder setTimestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
             return this;
         }
-        public Builder copy(LiveTrip liveTrip){
-            this.routeID = liveTrip.routeID;
+
+        public Builder copy(LiveTrip liveTrip) {
             this.tripID = liveTrip.tripID;
-            this.arrivesInMinute = liveTrip.arrivesInMinute;
-            this.currentStopID = liveTrip.currentStopID;
-            this.toCampusMinutes = liveTrip.toCampusMinutes;
-            this.timeStamp = liveTrip.timeStamp;
+            this.bus = liveTrip.bus;
+            this.route = liveTrip.route;
+            this.currentStop = liveTrip.currentStop;
             this.status = liveTrip.status;
-            this.busID = liveTrip.busID;
+            this.arrivesInMinutes = liveTrip.arrivesInMinutes;
+            this.toCampusMinutes = liveTrip.toCampusMinutes;
+            this.timestamp = liveTrip.timestamp;
             return this;
         }
-        public LiveTrip Build(){
+
+        public LiveTrip build() {
             return new LiveTrip(this);
         }
     }

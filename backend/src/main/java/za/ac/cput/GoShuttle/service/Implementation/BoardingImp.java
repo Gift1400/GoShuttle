@@ -1,14 +1,15 @@
-package za.ac.cput.GoShuttle.service;
+package za.ac.cput.GoShuttle.service.Implementation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.ac.cput.GoShuttle.domain.Boarding;
 import za.ac.cput.GoShuttle.repository.BoardingRepository;
+import za.ac.cput.GoShuttle.service.BoardingService;
 
 import java.util.List;
 
 @Service
-public class BoardingImp implements BoardingService{
+public class BoardingImp implements BoardingService {
     private final BoardingRepository boardingService;
 
     @Autowired

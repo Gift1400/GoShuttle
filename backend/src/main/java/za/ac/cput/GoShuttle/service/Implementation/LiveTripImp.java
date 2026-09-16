@@ -1,13 +1,14 @@
-package za.ac.cput.GoShuttle.service;
+package za.ac.cput.GoShuttle.service.Implementation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.ac.cput.GoShuttle.domain.LiveTrip;
 import za.ac.cput.GoShuttle.repository.LiveTripRepository;
+import za.ac.cput.GoShuttle.service.LiveTripService;
 
 import java.util.List;
 @Service
-public class LiveTripImp implements LiveTripService{
+public class LiveTripImp implements LiveTripService {
     private final LiveTripRepository liveTripService;
 
     @Autowired

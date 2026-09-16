@@ -1,4 +1,4 @@
-package com.example.demo;
+package za.ac.cput.GoShuttle;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
