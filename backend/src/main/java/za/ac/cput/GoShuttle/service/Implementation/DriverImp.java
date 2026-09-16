@@ -1,14 +1,15 @@
-package za.ac.cput.GoShuttle.service;
+package za.ac.cput.GoShuttle.service.Implementation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.ac.cput.GoShuttle.domain.Driver;
 import za.ac.cput.GoShuttle.repository.DriverRepository;
+import za.ac.cput.GoShuttle.service.DriverService;
 
 import java.util.List;
 
 @Service
-public class DriverImp implements DriverService{
+public class DriverImp implements DriverService {
     private final DriverRepository driverService;
 
     @Autowired

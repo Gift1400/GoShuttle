@@ -11,7 +11,10 @@ public class RoutesFactory {
                                       int durationMinutes, Time serviceStart,
                                       Time serviceEnd){
 
-        if(Helper.isNull(routesId)){
+        if(Helper.isNull(routesId)
+        && Helper.isNull(frequencyMinute)
+        && Helper.isNull(durationMinutes)
+        && Helper.isNullorEmpty(name)){
             return null;
         }
 
