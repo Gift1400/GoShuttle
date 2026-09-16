@@ -6,7 +6,7 @@ import za.ac.cput.GoShuttle.util.Helper;
 
 import java.time.LocalDateTime;
 @Entity
-public class LiveTrip {
+public class  LiveTrip {
     @Id
     private Long tripID;
     private Long busID;
