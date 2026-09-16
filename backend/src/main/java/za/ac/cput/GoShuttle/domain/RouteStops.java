@@ -1,7 +1,6 @@
 package za.ac.cput.GoShuttle.domain;
 
 import jakarta.persistence.*;
-import org.springframework.util.RouteMatcher;
 
 @Entity
 @Table(name = "routes_stops")

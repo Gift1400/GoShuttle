@@ -38,6 +38,6 @@ public class RoutesController {
 
     @GetMapping("/getAll")
     public List<Routes> getAll(){
-        return service.findAll();
+        return service.getAll();
     }
 }

@@ -7,5 +7,5 @@ import java.util.*;
 
 @Repository
 public interface RoutesRepository extends JpaRepository<Routes, Integer> {
-    List<Routes> findAll();
+    List<Routes> getAll();
 }

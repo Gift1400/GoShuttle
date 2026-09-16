@@ -41,8 +41,8 @@ public class RoutesServiceImpl implements IRoutesService {
     }
 
     @Override
-    public List<Routes> findAll() {
-        return repository.findAll();
+    public List<Routes> getAll() {
+        return repository.getAll();
     }
 
 }
