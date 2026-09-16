@@ -1,14 +1,15 @@
-package za.ac.cput.GoShuttle.service;
+package za.ac.cput.GoShuttle.service.Implementation;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import za.ac.cput.GoShuttle.domain.Bus;
 import za.ac.cput.GoShuttle.repository.BusRepository;
+import za.ac.cput.GoShuttle.service.BusService;
 
 import java.util.List;
 
 @Service
-public class BusImp implements BusService{
+public class BusImp implements BusService {
     private final  BusRepository busService;
 
     @Autowired
