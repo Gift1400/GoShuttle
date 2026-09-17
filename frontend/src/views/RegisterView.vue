@@ -72,11 +72,11 @@
               </span>
               <select id="campus" v-model="form.campus">
                 <option value="">Select your campus</option>
-                <option value="bellville">Bellville Campus</option>
-                <option value="district-six">District Six Campus</option>
-                <option value="cape-town">Cape Town Campus</option>
-                <option value="mowbray">Mowbray Campus</option>
-                <option value="wellington">Wellington Campus</option>
+                <option value="1">Bellville Campus</option>
+                <option value="2">District Six Campus</option>
+                <option value="3">Cape Town Campus</option>
+                <option value="4">Mowbray Campus</option>
+                <option value="5">Wellington Campus</option>
               </select>
             </div>
             <p class="error-msg" :class="{ show: errors.campus }">Please select your campus.</p>
@@ -120,7 +120,11 @@
 <script setup>
 import logo from '../assets/images/logo.jpeg'
 import { reactive } from 'vue'
-``
+import { useRouter } from 'vue-router'
+import { supabase } from '../supabaseClient'
+
+const router = useRouter()
+
 const form = reactive({
   fullName: '',
   studentNumber: '',
@@ -149,7 +153,7 @@ function showToast(message) {
   toastTimer = setTimeout(() => (toast.visible = false), 2400)
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   errors.fullName = form.fullName.trim().length < 2
   errors.studentNumber = !/^\d{6,10}$/.test(form.studentNumber.trim())
   errors.email = !/^[\w.+-]+@mycput\.ac\.za$/i.test(form.email.trim())
@@ -160,7 +164,21 @@ function handleSubmit() {
   const hasError = Object.values(errors).some(Boolean)
   if (hasError) return
 
+  const { error: insertError } = await supabase.from('users').insert({
+    full_name: form.fullName.trim(),
+    student_number: form.studentNumber.trim(),
+    email: form.email.trim(),
+    password: form.password,
+    campus_id: Number(form.campus),
+  })
+
+  if (insertError) {
+    showToast('Registration failed: ' + insertError.message)
+    return
+  }
+
   showToast(`Account created — welcome, ${form.fullName.split(' ')[0]}`)
+  setTimeout(() => router.push('/sign-in'), 1500)
 }
 </script>
 

@@ -96,6 +96,10 @@
 <script setup>
 import logo from '../assets/images/logo.jpeg'
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '../supabaseClient'
+
+const router = useRouter()
 
 const form = reactive({ studentId: '', password: '' })
 const errors = reactive({ studentId: false, password: false })
@@ -109,13 +113,36 @@ function showToast(message) {
   toastTimer = setTimeout(() => (toast.visible = false), 2200)
 }
 
-function handleSubmit() {
-  errors.studentId = !form.studentId
+async function handleSubmit() {
+  errors.studentId = !form.studentId.trim()
   errors.password = !form.password
 
   if (errors.studentId || errors.password) return
 
-  showToast(`Welcome back, ${form.studentId}`)
+  const loginValue = form.studentId.trim()
+
+  const query = supabase
+      .from('users')
+      .select('*')
+      .eq('password', form.password)
+
+  const { data, error } = loginValue.includes('@')
+      ? await query.eq('email', loginValue).single()
+      : await query.eq('student_number', loginValue).single()
+
+  if (error || !data) {
+    showToast('Invalid student number/email or password')
+    return
+  }
+
+  // Save logged-in user
+  localStorage.setItem('user', JSON.stringify(data))
+
+  showToast(`Welcome back, ${data.full_name.split(' ')[0]}`)
+
+  setTimeout(() => {
+    router.push({ name: 'home' })
+  }, 1000)
 }
 </script>
 
