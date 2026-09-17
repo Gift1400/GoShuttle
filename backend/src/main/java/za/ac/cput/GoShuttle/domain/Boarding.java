@@ -1,15 +1,22 @@
 package za.ac.cput.GoShuttle.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 @Entity
+@Table(name = "boarding")
 public class Boarding {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long boardingID;
+
+
     private Long userID ;
-    private Long liveTripID;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "live_trip_id", nullable = false)
+    private LiveTrip liveTrip;
+
     private LocalDateTime boardedAt;
     private LocalDateTime alightedAt;
 
@@ -17,7 +24,7 @@ public class Boarding {
     public Boarding(Builder builder){
         this.boardingID = builder.boardingID;
         this.userID = builder.userID;
-        this.liveTripID = builder.liveTripID;
+        this.liveTrip = builder.liveTrip;
         this.boardedAt = builder.boardedAt;
         this.alightedAt = builder.alightedAt;
     }
@@ -30,8 +37,8 @@ public class Boarding {
         return userID;
     }
 
-    public Long getLiveTripID() {
-        return liveTripID;
+    public LiveTrip getLiveTripID() {
+        return liveTrip;
     }
 
     public LocalDateTime getBoardedAt() {
@@ -47,7 +54,7 @@ public class Boarding {
         return "Boarding{" +
                 "boardingID=" + boardingID +
                 ", userID=" + userID +
-                ", liveTripID=" + liveTripID +
+                ", liveTripID=" + liveTrip +
                 ", boardedAt=" + boardedAt +
                 ", alightedAt=" + alightedAt +
                 '}';
@@ -56,39 +63,45 @@ public class Boarding {
     public static class Builder{
         private Long boardingID;
         private Long userID ;
-        private Long liveTripID;
+        private LiveTrip liveTrip;
         private LocalDateTime boardedAt;
         private LocalDateTime alightedAt;
 
-        public Builder setBoardingID(Long boardingID){
+        public Builder setBoardingID(Long boardingID) {
             this.boardingID = boardingID;
             return this;
         }
-        public Builder setUserID(Long userID){
-            this.userID = userID;
+
+        public Builder setUser(Long user) {
+            this.userID = user;
             return this;
         }
-        public Builder setLiveTripID(Long liveTripID){
-            this.liveTripID = liveTripID;
+
+        public Builder setLiveTrip(LiveTrip liveTrip) {
+            this.liveTrip = liveTrip;
             return this;
         }
-        public Builder setBoardingAt(LocalDateTime boardedAt){
+
+        public Builder setBoardedAt(LocalDateTime boardedAt) {
             this.boardedAt = boardedAt;
             return this;
         }
-        public Builder setAlightedAt(LocalDateTime alightedAt){
+
+        public Builder setAlightedAt(LocalDateTime alightedAt) {
             this.alightedAt = alightedAt;
             return this;
         }
-        public Builder copy(Boarding boarding){
+
+        public Builder copy(Boarding boarding) {
             this.boardingID = boarding.boardingID;
             this.userID = boarding.userID;
+            this.liveTrip = boarding.liveTrip;
             this.boardedAt = boarding.boardedAt;
-            this.liveTripID = boarding.liveTripID;
             this.alightedAt = boarding.alightedAt;
             return this;
         }
-        public Boarding Build(){
+
+        public Boarding build() {
             return new Boarding(this);
         }
     }

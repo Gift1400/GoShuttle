@@ -1,17 +1,14 @@
 <template>
   <div class="page auth-page">
     <div class="container">
-      <section class="glass auth-card">
+      <section class="glass auth-card desktop-layout">
         <div class="auth-hero">
           <div class="auth-logo">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="5" width="16" height="12" rx="2.2"/>
-              <line x1="4" y1="11" x2="20" y2="11"/>
-              <line x1="8" y1="5" x2="8" y2="11"/>
-              <line x1="16" y1="5" x2="16" y2="11"/>
-              <circle cx="7.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-              <circle cx="16.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-            </svg>
+            <img
+                :src="logo"
+                alt="GoShuttle Logo"
+                class="logo-image"
+            />
           </div>
           <h1>Welcome back</h1>
           <p>Sign in to track buses &amp; manage your pass</p>
@@ -97,6 +94,7 @@
 </template>
 
 <script setup>
+import logo from '../assets/images/logo.jpeg'
 import { reactive } from 'vue'
 
 const form = reactive({ studentId: '', password: '' })
