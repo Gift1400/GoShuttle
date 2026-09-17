@@ -1,7 +1,6 @@
 package za.ac.cput.GoShuttle.domain;
 
 import jakarta.persistence.*;
-import org.springframework.util.RouteMatcher;
 
 @Entity
 @Table(name = "routes_stops")
@@ -13,7 +12,7 @@ public class RouteStops {
     private String kind;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Column(name = "route")
+    @JoinColumn(name = "route")
     private Routes routes;
 
     protected RouteStops(){}
