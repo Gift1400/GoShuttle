@@ -16,7 +16,11 @@
         <input v-model="query" type="text" class="search-input" placeholder="Search stop or area…" autocomplete="off" />
       </section>
 
-      <section class="routes-list">
+      <div v-if="routes.length === 0 && !query" class="empty-state">
+        Loading routes from database...
+      </div>
+
+      <section v-else class="routes-list">
         <article
           v-for="route in filteredRoutes"
           :key="route.id"
@@ -26,11 +30,13 @@
             <span class="badge" :class="route.badgeClass">{{ route.code }}</span>
             <div class="route-header-text">
               <span class="route-title">{{ route.title }}</span>
-              <span class="route-meta">{{ route.stops.length }} stops · ~{{ route.duration }} min · every {{ route.frequency }} min</span>
+              <span class="route-meta" v-if="route.stops">
+                {{ route.stops.length }} stops · ~{{ route.duration }} min · every {{ route.frequency }} min
+              </span>
             </div>
           </div>
 
-          <ul class="stops-list">
+          <ul class="stops-list" v-if="route.stops">
             <li
               v-for="(stop, i) in route.stops"
               :key="stop.name"
@@ -51,7 +57,7 @@
           </ul>
         </article>
 
-        <p v-if="!filteredRoutes.length" class="empty-state">No stops match your search.</p>
+        <p v-if="!filteredRoutes.length && query" class="empty-state">No stops match your search.</p>
       </section>
 
       <transition name="pref-fade">
@@ -66,50 +72,43 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { supabase } from '../supabaseClient.js'
 
 const query = ref('')
 const selectedStop = ref('')
+const routes = ref([])
 
-const routes = [
-  {
-    id: 'g1',
-    code: 'G1',
-    badgeClass: 'badge-g1',
-    title: 'Khayelitsha → Bellville',
-    duration: 45,
-    frequency: 45,
-    stops: [
-      { name: 'Site B Taxi Rank', area: 'Khayelitsha', offset: 'Start' },
-      { name: 'Site C Community Hall', area: 'Khayelitsha', offset: '+8 min' },
-      { name: 'Delft Main Road', area: 'Near Leiden', offset: '+22 min' },
-      { name: 'CPUT Bellville Campus', area: 'Symphony Way entrance', offset: '+45 min', campus: true }
-    ]
-  },
-  {
-    id: 'g2',
-    code: 'G2',
-    badgeClass: 'badge-g2',
-    title: 'Mitchells Plain → Cape Town',
-    duration: 52,
-    frequency: 60,
-    stops: [
-      { name: 'Town Centre Taxi Rank', area: 'Mitchells Plain', offset: 'Start' },
-      { name: 'Strandfontein Road', area: 'Near Rocklands', offset: '+18 min' },
-      { name: 'CPUT Cape Town Campus', area: 'District Six / Keizersgracht', offset: '+52 min', campus: true }
-    ]
+
+onMounted(async () => {
+  const { data, error } = await supabase
+    .from('routes')
+    .select('*')
+
+  if (error) {
+    console.error('Database connection error:', error.message)
+  } else {
+    routes.value = data
   }
-]
+})
 
-function selectStop(name) {
-  selectedStop.value = selectedStop.value === name ? '' : name
-}
+onMounted(async () => {
+  const { data, error } = await supabase
+    .from('routes') // This targets a table named 'routes' in your Supabase
+    .select('*')
+
+  if (error) {
+    console.error('Error fetching routes from Supabase:', error.message)
+  } else {
+    routes.value = data // This populates your page instantly with the database rows
+  }
+})
 
 const filteredRoutes = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return routes
+  if (!q) return routes.value // Added .value here
 
-  return routes
+  return routes.value // Added .value here
     .map((route) => {
       const matchingStops = route.stops.filter((s) =>
         `${s.name} ${s.area}`.toLowerCase().includes(q)
@@ -122,6 +121,7 @@ const filteredRoutes = computed(() => {
     .filter(Boolean)
 })
 </script>
+
 
 <style scoped>
 .page-head {
@@ -330,6 +330,7 @@ const filteredRoutes = computed(() => {
 .pref-fade-leave-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 .pref-fade-enter-from,
 .pref-fade-leave-to {
   opacity: 0;
