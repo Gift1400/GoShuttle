@@ -161,19 +161,37 @@ async function handleSubmit() {
   errors.password = form.password.length < 8
   errors.terms = !form.terms
 
-  const hasError = Object.values(errors).some(Boolean)
-  if (hasError) return
+  if (Object.values(errors).some(Boolean)) return
 
-  const { error: insertError } = await supabase.from('users').insert({
-    full_name: form.fullName.trim(),
-    student_number: form.studentNumber.trim(),
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: form.email.trim(),
     password: form.password,
-    campus_id: Number(form.campus),
+    options: {
+      data: {
+        full_name: form.fullName.trim(),
+        student_number: form.studentNumber.trim()
+      }
+    }
   })
 
+  if (authError) {
+    console.error('Auth error:', authError)
+    showToast(authError.message)
+    return
+  }
+
+  const { error: insertError } = await supabase
+      .from('users')
+      .insert({
+        full_name: form.fullName.trim(),
+        student_number: form.studentNumber.trim(),
+        email: form.email.trim(),
+        campus_id: Number(form.campus)
+      })
+
   if (insertError) {
-    showToast('Registration failed: ' + insertError.message)
+    console.error('Users table error:', insertError)
+    showToast('Auth created, but users table failed: ' + insertError.message)
     return
   }
 

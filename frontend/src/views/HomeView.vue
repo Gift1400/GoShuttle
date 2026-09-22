@@ -5,7 +5,7 @@
       <!-- Hero -->
       <section class="hero">
         <span id="section-eyebrow">GoShuttle</span>
-        <h1>Good morning, Samu</h1>
+        <h1>Good morning, {{ displayName }}</h1>
         <p class="hero-sub">Track your bus, check schedules and manage your pass — all in one place.</p>
         <div class="hero-actions">
           <router-link to="/track" class="btn btn-primary">Track my bus</router-link>
@@ -65,6 +65,32 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import { supabase } from '../supabaseClient'
+
+const displayName = ref('Student')
+
+onMounted(async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+    displayName.value = 'Student'
+    return
+  }
+
+  const { data: profile } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('email', session.user.email)
+      .single()
+
+  if (profile?.full_name) {
+    displayName.value = profile.full_name.split(' ')[0]
+  } else {
+    displayName.value = session.user.email?.split('@')[0] || 'Student'
+  }
+})
+
 const upcomingBuses = [
   {
     code: 'G1',

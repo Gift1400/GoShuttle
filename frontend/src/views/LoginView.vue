@@ -120,29 +120,36 @@ async function handleSubmit() {
   if (errors.studentId || errors.password) return
 
   const loginValue = form.studentId.trim()
+  let email = loginValue
 
-  const query = supabase
-      .from('users')
-      .select('*')
-      .eq('password', form.password)
+  if (!loginValue.includes('@')) {
+    const { data: user, error: lookupError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('student_number', loginValue)
+        .single()
 
-  const { data, error } = loginValue.includes('@')
-      ? await query.eq('email', loginValue).single()
-      : await query.eq('student_number', loginValue).single()
+    if (lookupError || !user) {
+      showToast('Invalid student number or password')
+      return
+    }
+    email = user.email
+  }
 
-  if (error || !data) {
-    showToast('Invalid student number/email or password')
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: form.password
+  })
+
+  if (error) {
+    showToast(error.message || 'Invalid email or password')
     return
   }
 
-  // Save logged-in user
-  localStorage.setItem('user', JSON.stringify(data))
-
-  showToast(`Welcome back, ${data.full_name.split(' ')[0]}`)
-
+  showToast(`Welcome back!`)
   setTimeout(() => {
     router.push({ name: 'home' })
-  }, 1000)
+  }, 800)
 }
 </script>
 

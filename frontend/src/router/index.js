@@ -44,6 +44,11 @@ const routes = [
     meta: { title: 'Create Account' }
   },
   {
+    path: '/driver-track',
+    name: 'driver-track',
+    component: () => import('../views/DriverTrackView.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('../views/NotFoundView.vue'),

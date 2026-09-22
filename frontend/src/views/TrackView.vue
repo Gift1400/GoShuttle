@@ -10,30 +10,11 @@
 
       <div class="track-grid">
 
-        <!-- Route progress -->
-        <section class="glass progress-card">
-          <h2 class="card-title">Route progress</h2>
-          <ol class="progress-track">
-            <li v-for="(stop, i) in bus.stops" :key="stop.name" class="progress-stop"
-              :class="{ passed: i < currentIndex, active: i === currentIndex }">
-              <span class="progress-node">
-                <svg v-if="i === currentIndex" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="7" width="15" height="10" rx="2" />
-                  <path d="M18 10h2.5a1.5 1.5 0 0 1 1.34.83L23 13v4h-2" />
-                  <circle cx="7.5" cy="18.5" r="1.4" />
-                  <circle cx="17.5" cy="18.5" r="1.4" />
-                </svg>
-              </span>
-              <span class="progress-label">
-                <span class="progress-name">{{ stop.name }}</span>
-                <span class="progress-time">{{ stop.time }}</span>
-              </span>
-            </li>
-          </ol>
+        <section class="glass map-card">
+          <h2 class="card-title">Live Map</h2>
+          <div id="map" class="map-container"></div>
         </section>
 
-        <!-- Bus info -->
         <section class="glass info-card">
           <h2 class="card-title">Bus details</h2>
 
@@ -71,23 +52,42 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const bus = {
   number: 'GS-112',
   route: 'Khayelitsha → CPUT Bellville',
   status: 'On Time',
   driver: 'Thabo M.',
-  capacity: 62,
-  stops: [
-    { name: 'Site B Taxi Rank', time: '07:20' },
-    { name: 'Site C Taxi Rank (current)', time: '07:28' },
-    { name: 'Delft Main Road', time: '07:35' },
-    { name: 'CPUT Bellville Campus', time: '07:45' }
-  ]
+  capacity: 62
 }
 
-const currentIndex = computed(() => 1)
+let map = null
+let busMarker = null
+
+onMounted(() => {
+  // Center roughly between Khayelitsha and Bellville
+  map = L.map('map').setView([-33.95, 18.65], 12)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map)
+
+  // Bus marker (you can update its position later with live data)
+  busMarker = L.marker([-33.98, 18.68])
+      .addTo(map)
+      .bindPopup('GS-112 • On Time')
+      .openPopup()
+})
+
+onUnmounted(() => {
+  if (map) {
+    map.remove()
+    map = null
+  }
+})
 </script>
 
 <style scoped>
@@ -170,7 +170,6 @@ const currentIndex = computed(() => 1)
   padding: 26px 28px;
 }
 
-/* Progress track */
 .progress-track {
   position: relative;
   display: flex;
@@ -301,6 +300,32 @@ const currentIndex = computed(() => 1)
 @media (max-width: 820px) {
   .track-grid {
     grid-template-columns: 1fr;
+  }
+}
+.map-card {
+  padding: 20px;
+}
+
+.map-container {
+  width: 100%;
+  height: 420px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .track-grid {
+    grid-template-columns: 1fr;
+  }
+  .map-container {
+    height: 320px;
   }
 }
 </style>
