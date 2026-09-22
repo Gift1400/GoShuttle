@@ -1,14 +1,17 @@
 package za.ac.cput.GoShuttle.factory;
 
+import za.ac.cput.GoShuttle.domain.Bus;
 import za.ac.cput.GoShuttle.domain.LiveTrip;
+import za.ac.cput.GoShuttle.domain.RouteStops;
+import za.ac.cput.GoShuttle.domain.Routes;
 import za.ac.cput.GoShuttle.util.Helper;
 
 import java.time.LocalDateTime;
 
 public class liveTripFactory {
-    public static LiveTrip createLiveTrip(Long tripID, Long busID, Long routeID, Long currentStopID, Helper.liveTripStatus status,
+    public static LiveTrip createLiveTrip(Long tripID, Bus busID, Routes routeID, RouteStops currentStopID, Helper.liveTripStatus status,
                                           int arrivesInMinute, int toCampusMinutes, LocalDateTime timeStamp){
-        if (Helper.isEmpty(tripID) || Helper.isEmpty(busID) || Helper.isEmpty(routeID) || Helper.isEmpty(currentStopID)){
+        if (Helper.isEmpty(tripID) ){
             return null;
         }
         if(Helper.isNull(arrivesInMinute) || Helper.isNull(toCampusMinutes)){
@@ -16,13 +19,13 @@ public class liveTripFactory {
         }
         return new LiveTrip.Builder()
                 .setTripID(tripID)
-                .setBusID(busID)
-                .setRouteID(routeID)
-                .setCurrentStopID(currentStopID)
+                .setBus(busID)
+                .setRoute(routeID)
+                .setCurrentStop(currentStopID)
                 .setStatus(status)
-                .setSArrivesInMinute(arrivesInMinute)
+                .setArrivesInMinutes(arrivesInMinute)
                 .setToCampusMinutes(toCampusMinutes)
-                .setTimeStamp(timeStamp)
-                .Build();
+                .setTimestamp(timeStamp)
+                .build();
     }
 }

@@ -1,17 +1,14 @@
 <template>
   <div class="page auth-page">
     <div class="container">
-      <section class="glass auth-card">
+      <section class="glass auth-card desktop-layout">
         <div class="auth-hero">
           <div class="auth-logo">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="5" width="16" height="12" rx="2.2"/>
-              <line x1="4" y1="11" x2="20" y2="11"/>
-              <line x1="8" y1="5" x2="8" y2="11"/>
-              <line x1="16" y1="5" x2="16" y2="11"/>
-              <circle cx="7.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-              <circle cx="16.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-            </svg>
+            <img
+                :src="logo"
+                alt="GoShuttle Logo"
+                class="logo-image"
+            />
           </div>
           <h1>Welcome back</h1>
           <p>Sign in to track buses &amp; manage your pass</p>
@@ -97,7 +94,12 @@
 </template>
 
 <script setup>
+import logo from '../assets/images/logo.jpeg'
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '../supabaseClient'
+
+const router = useRouter()
 
 const form = reactive({ studentId: '', password: '' })
 const errors = reactive({ studentId: false, password: false })
@@ -111,13 +113,36 @@ function showToast(message) {
   toastTimer = setTimeout(() => (toast.visible = false), 2200)
 }
 
-function handleSubmit() {
-  errors.studentId = !form.studentId
+async function handleSubmit() {
+  errors.studentId = !form.studentId.trim()
   errors.password = !form.password
 
   if (errors.studentId || errors.password) return
 
-  showToast(`Welcome back, ${form.studentId}`)
+  const loginValue = form.studentId.trim()
+
+  const query = supabase
+      .from('users')
+      .select('*')
+      .eq('password', form.password)
+
+  const { data, error } = loginValue.includes('@')
+      ? await query.eq('email', loginValue).single()
+      : await query.eq('student_number', loginValue).single()
+
+  if (error || !data) {
+    showToast('Invalid student number/email or password')
+    return
+  }
+
+  // Save logged-in user
+  localStorage.setItem('user', JSON.stringify(data))
+
+  showToast(`Welcome back, ${data.full_name.split(' ')[0]}`)
+
+  setTimeout(() => {
+    router.push({ name: 'home' })
+  }, 1000)
 }
 </script>
 
