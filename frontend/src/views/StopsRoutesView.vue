@@ -9,7 +9,8 @@
       </section>
 
       <section class="glass search-panel">
-        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
@@ -21,11 +22,7 @@
       </div>
 
       <section v-else class="routes-list">
-        <article
-          v-for="route in filteredRoutes"
-          :key="route.id"
-          class="glass route-card"
-        >
+        <article v-for="route in filteredRoutes" :key="route.id" class="glass route-card">
           <div class="route-header">
             <span class="badge" :class="route.badgeClass">{{ route.code }}</span>
             <div class="route-header-text">
@@ -37,13 +34,8 @@
           </div>
 
           <ul class="stops-list" v-if="route.stops">
-            <li
-              v-for="(stop, i) in route.stops"
-              :key="stop.name"
-              class="stop-item"
-              :class="{ selected: selectedStop === stop.name }"
-              @click="selectStop(stop.name)"
-            >
+            <li v-for="(stop, i) in route.stops" :key="stop.name" class="stop-item"
+              :class="{ selected: selectedStop === stop.name }" @click="selectStop(stop.name)">
               <span class="dot" :class="i === 0 || i === route.stops.length - 1 ? 'major' : 'minor'"></span>
               <span class="stop-info">
                 <span class="stop-name-row">
@@ -94,21 +86,21 @@ onMounted(async () => {
 
 onMounted(async () => {
   const { data, error } = await supabase
-    .from('routes') // This targets a table named 'routes' in your Supabase
+    .from('routes') 
     .select('*')
 
   if (error) {
     console.error('Error fetching routes from Supabase:', error.message)
   } else {
-    routes.value = data // This populates your page instantly with the database rows
+    routes.value = data 
   }
 })
 
 const filteredRoutes = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return routes.value // Added .value here
+  if (!q) return routes.value 
 
-  return routes.value // Added .value here
+  return routes.value 
     .map((route) => {
       const matchingStops = route.stops.filter((s) =>
         `${s.name} ${s.area}`.toLowerCase().includes(q)
