@@ -1,23 +1,31 @@
 package za.ac.cput.GoShuttle.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "bus")
 public class Bus {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long busID;
     private Long busNumber;
-    private Long routeID;
-    private Long driverID;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "route_id")
+    private Routes routes;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
+
     private int capacity;
 
     public Bus(){}
     public Bus(Builder builder){
         this.busID = builder.busID;
         this.busNumber = builder.busNumber;
-        this.routeID = builder.routeID;
-        this.driverID = builder.driverID;
+        this.routes = builder.routes;
+        this.driver = builder.driver;
         this.capacity = builder.capacity;
     }
 
@@ -29,12 +37,12 @@ public class Bus {
         return busNumber;
     }
 
-    public Long getRouteID() {
-        return routeID;
+    public Routes getRoutes() {
+        return routes;
     }
 
-    public Long getDriverID() {
-        return driverID;
+    public Driver getDriver() {
+        return driver;
     }
 
     public int getCapacity() {
@@ -46,16 +54,17 @@ public class Bus {
         return "Bus{" +
                 "busID=" + busID +
                 ", busNumber=" + busNumber +
-                ", routeID=" + routeID +
-                ", driverID=" + driverID +
+                ", routes=" + routes +
+                ", driver=" + driver +
                 ", capacity=" + capacity +
                 '}';
     }
+
     public static class Builder{
         private Long busID;
         private Long busNumber;
-        private Long routeID;
-        private Long driverID;
+        private Routes routes;
+        private Driver driver;
         private int capacity;
 
         public Builder setBusID(Long busID){
@@ -66,12 +75,12 @@ public class Bus {
             this.busNumber = busNumber;
             return this;
         }
-        public Builder setRouteID(Long routeID){
-            this.routeID = routeID;
+        public Builder setRoutes(Routes routes){
+            this.routes = routes;
             return this;
         }
-        public Builder setDriverID(Long driverID){
-            this.driverID = driverID;
+        public Builder setDriver(Driver driver){
+            this.driver = driver;
             return this;
         }
         public Builder setCapacity(int capacity){
@@ -81,8 +90,8 @@ public class Bus {
         public Builder copy(Bus bus){
             this.busID = bus.busID;
             this.busNumber = bus.busNumber;
-            this.routeID = bus.routeID;
-            this.driverID = bus.driverID;
+            this.routes = bus.routes;
+            this.driver = bus.driver;
             this.capacity = bus.capacity;
             return this;
         }

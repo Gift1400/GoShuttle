@@ -1,17 +1,14 @@
 <template>
   <div class="page auth-page">
     <div class="container">
-      <section class="glass auth-card">
+      <section class="glass auth-card desktop-layout">
         <div class="auth-hero">
           <div class="auth-logo">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="5" width="16" height="12" rx="2.2"/>
-              <line x1="4" y1="11" x2="20" y2="11"/>
-              <line x1="8" y1="5" x2="8" y2="11"/>
-              <line x1="16" y1="5" x2="16" y2="11"/>
-              <circle cx="7.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-              <circle cx="16.5" cy="18.4" r="1.3" fill="#ffffff" stroke="none"/>
-            </svg>
+            <img
+                :src="logo"
+                alt="GoShuttle Logo"
+                class="logo-image"
+            />
           </div>
           <h1>Create account</h1>
           <p>Join GoShuttle with your CPUT details</p>
@@ -75,11 +72,11 @@
               </span>
               <select id="campus" v-model="form.campus">
                 <option value="">Select your campus</option>
-                <option value="bellville">Bellville Campus</option>
-                <option value="district-six">District Six Campus</option>
-                <option value="cape-town">Cape Town Campus</option>
-                <option value="mowbray">Mowbray Campus</option>
-                <option value="wellington">Wellington Campus</option>
+                <option value="1">Bellville Campus</option>
+                <option value="2">District Six Campus</option>
+                <option value="3">Cape Town Campus</option>
+                <option value="4">Mowbray Campus</option>
+                <option value="5">Wellington Campus</option>
               </select>
             </div>
             <p class="error-msg" :class="{ show: errors.campus }">Please select your campus.</p>
@@ -121,7 +118,12 @@
 </template>
 
 <script setup>
+import logo from '../assets/images/logo.jpeg'
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { supabase } from '../supabaseClient'
+
+const router = useRouter()
 
 const form = reactive({
   fullName: '',
@@ -151,7 +153,7 @@ function showToast(message) {
   toastTimer = setTimeout(() => (toast.visible = false), 2400)
 }
 
-function handleSubmit() {
+async function handleSubmit() {
   errors.fullName = form.fullName.trim().length < 2
   errors.studentNumber = !/^\d{6,10}$/.test(form.studentNumber.trim())
   errors.email = !/^[\w.+-]+@mycput\.ac\.za$/i.test(form.email.trim())
@@ -162,7 +164,21 @@ function handleSubmit() {
   const hasError = Object.values(errors).some(Boolean)
   if (hasError) return
 
+  const { error: insertError } = await supabase.from('users').insert({
+    full_name: form.fullName.trim(),
+    student_number: form.studentNumber.trim(),
+    email: form.email.trim(),
+    password: form.password,
+    campus_id: Number(form.campus),
+  })
+
+  if (insertError) {
+    showToast('Registration failed: ' + insertError.message)
+    return
+  }
+
   showToast(`Account created — welcome, ${form.fullName.split(' ')[0]}`)
+  setTimeout(() => router.push('/sign-in'), 1500)
 }
 </script>
 
