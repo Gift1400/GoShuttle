@@ -52,9 +52,10 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { supabase } from '../supabaseClient'
 
 const bus = {
   number: 'GS-112',
@@ -64,25 +65,115 @@ const bus = {
   capacity: 62
 }
 
+
+
 let map = null
 let busMarker = null
+let routeLine = null
+let refreshInterval = null
 
-onMounted(() => {
-  // Center roughly between Khayelitsha and Bellville
-  map = L.map('map').setView([-33.95, 18.65], 12)
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map)
+async function loadCurrentPosition() {
 
-  // Bus marker (you can update its position later with live data)
-  busMarker = L.marker([-33.98, 18.68])
-      .addTo(map)
-      .bindPopup('GS-112 • On Time')
-      .openPopup()
+  const { data, error } = await supabase
+      .from('live_trip')
+      .select('lat,lng')
+      .eq('bus_id', 1)
+      .order('updated_at', { ascending: true })
+
+  if (error || !data || data.length === 0) {
+    console.error('Could not load live position:', error)
+    return
+  }
+
+  const coordinates = data.map(point => [
+    point.lat,
+    point.lng
+  ])
+
+  console.log('Coordinates:', coordinates)
+
+  const currentPos = coordinates[coordinates.length - 1]
+
+  if (!busMarker) {
+    busMarker = L.marker(currentPos)
+        .addTo(map)
+        .bindPopup(`${bus.number} • ${bus.status}`)
+        .openPopup()
+  } else {
+    busMarker.setLatLng(currentPos)
+  }
+
+  if (routeLine) {
+    map.removeLayer(routeLine)
+  }
+
+  if (coordinates.length > 1) {
+
+    routeLine = L.polyline(coordinates, {
+      color: '#1B3B73',
+      weight: 4,
+      opacity: 0.75
+    }).addTo(map)
+
+    map.fitBounds(routeLine.getBounds(), {
+      padding: [40, 40]
+    })
+
+  } else {
+
+    map.setView(currentPos, 15)
+
+  }
+}
+
+onMounted(async () => {
+
+  map = L.map('map').setView([0, 0], 2)
+
+  L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution: '© OpenStreetMap'
+      }
+  ).addTo(map)
+
+  const { count } = await supabase
+      .from('live_trip')
+      .select('*', {
+        count: 'exact',
+        head: true
+      })
+      .eq('bus_id', 1)
+
+  if (count > 0) {
+    await loadCurrentPosition()
+  }
+
+
+  refreshInterval = setInterval(async () => {
+
+    const { count } = await supabase
+        .from('live_trip')
+        .select('*', {
+          count: 'exact',
+          head: true
+        })
+        .eq('bus_id', 1)
+
+    if (count > 0) {
+      await loadCurrentPosition()
+    }
+
+  }, 2000)
 })
 
+
 onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+  }
+
   if (map) {
     map.remove()
     map = null
