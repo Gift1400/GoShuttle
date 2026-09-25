@@ -17,8 +17,16 @@
         <input v-model="query" type="text" class="search-input" placeholder="Search stop or area…" autocomplete="off" />
       </section>
 
-      <div v-if="routes.length === 0 && !query" class="empty-state">
+      <div v-if="loading" class="empty-state">
         Loading routes from database...
+      </div>
+
+      <div v-else-if="loadError" class="empty-state">
+        {{ loadError }}
+      </div>
+
+      <div v-else-if="routes.length === 0" class="empty-state">
+        No routes have been added yet.
       </div>
 
       <section v-else class="routes-list">
@@ -70,42 +78,87 @@ import { supabase } from '../supabaseClient.js'
 const query = ref('')
 const selectedStop = ref('')
 const routes = ref([])
+const loading = ref(true)
+const loadError = ref('')
 
+// Turns an offset in minutes into the small label shown next to each stop.
+function formatOffset(sequenceOrder, offsetMinutes) {
+  if (sequenceOrder === 0) return 'Start'
+  return `+${offsetMinutes} min`
+}
 
-onMounted(async () => {
+// Maps a raw Supabase row (routes joined to route_stops -> stops) into
+// the shape the template below already expects.
+function mapRoute(row) {
+  const stops = (row.route_stops ?? [])
+    .slice()
+    .sort((a, b) => a.sequence_order - b.sequence_order)
+    .map((rs) => ({
+      name: rs.stops?.name ?? 'Unknown stop',
+      area: rs.stops?.area ?? '',
+      campus: rs.stops?.is_campus ?? false,
+      offset: formatOffset(rs.sequence_order, rs.offset_minutes)
+    }))
+
+  return {
+    id: row.id,
+    code: row.code,
+    title: row.name,
+    badgeClass: row.badge_class || `badge-${(row.code ?? '').toLowerCase()}`,
+    duration: row.duration_minutes,
+    frequency: row.frequency_minutes,
+    stops
+  }
+}
+
+async function loadRoutes() {
+  loading.value = true
+  loadError.value = ''
+
   const { data, error } = await supabase
     .from('routes')
-    .select('*')
-
-  if (error) {
-    console.error('Database connection error:', error.message)
-  } else {
-    routes.value = data
-  }
-})
-
-onMounted(async () => {
-  const { data, error } = await supabase
-    .from('routes') 
-    .select('*')
+    .select(`
+      id,
+      code,
+      name,
+      badge_class,
+      duration_minutes,
+      frequency_minutes,
+      route_stops (
+        sequence_order,
+        offset_minutes,
+        kind,
+        stops ( name, area, is_campus )
+      )
+    `)
+    .order('code', { ascending: true })
+    .order('sequence_order', { foreignTable: 'route_stops', ascending: true })
 
   if (error) {
     console.error('Error fetching routes from Supabase:', error.message)
+    loadError.value = 'Could not load routes right now. Please try again shortly.'
   } else {
-    routes.value = data 
+    routes.value = (data ?? []).map(mapRoute)
   }
-})
+  loading.value = false
+}
+
+onMounted(loadRoutes)
+
+function selectStop(name) {
+  selectedStop.value = name
+}
 
 const filteredRoutes = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return routes.value 
+  if (!q) return routes.value
 
-  return routes.value 
+  return routes.value
     .map((route) => {
-      const matchingStops = route.stops.filter((s) =>
+      const matchingStops = (route.stops ?? []).filter((s) =>
         `${s.name} ${s.area}`.toLowerCase().includes(q)
       )
-      const routeMatches = route.title.toLowerCase().includes(q)
+      const routeMatches = (route.title ?? '').toLowerCase().includes(q)
       if (routeMatches) return route
       if (matchingStops.length) return { ...route, stops: matchingStops }
       return null
