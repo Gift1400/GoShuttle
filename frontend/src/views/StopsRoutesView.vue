@@ -9,23 +9,28 @@
       </section>
 
       <section class="glass search-panel">
-        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="7"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
         <input v-model="query" type="text" class="search-input" placeholder="Search stop or area…" autocomplete="off" />
       </section>
 
-      <div v-if="routes.length === 0 && !query" class="empty-state">
+      <div v-if="loading" class="empty-state">
         Loading routes from database...
       </div>
 
+      <div v-else-if="loadError" class="empty-state">
+        {{ loadError }}
+      </div>
+
+      <div v-else-if="routes.length === 0" class="empty-state">
+        No routes have been added yet.
+      </div>
+
       <section v-else class="routes-list">
-        <article
-          v-for="route in filteredRoutes"
-          :key="route.id"
-          class="glass route-card"
-        >
+        <article v-for="route in filteredRoutes" :key="route.id" class="glass route-card">
           <div class="route-header">
             <span class="badge" :class="route.badgeClass">{{ route.code }}</span>
             <div class="route-header-text">
@@ -37,13 +42,8 @@
           </div>
 
           <ul class="stops-list" v-if="route.stops">
-            <li
-              v-for="(stop, i) in route.stops"
-              :key="stop.name"
-              class="stop-item"
-              :class="{ selected: selectedStop === stop.name }"
-              @click="selectStop(stop.name)"
-            >
+            <li v-for="(stop, i) in route.stops" :key="stop.name" class="stop-item"
+              :class="{ selected: selectedStop === stop.name }" @click="selectStop(stop.name)">
               <span class="dot" :class="i === 0 || i === route.stops.length - 1 ? 'major' : 'minor'"></span>
               <span class="stop-info">
                 <span class="stop-name-row">
@@ -78,42 +78,87 @@ import { supabase } from '../supabaseClient.js'
 const query = ref('')
 const selectedStop = ref('')
 const routes = ref([])
+const loading = ref(true)
+const loadError = ref('')
 
+// Turns an offset in minutes into the small label shown next to each stop.
+function formatOffset(sequenceOrder, offsetMinutes) {
+  if (sequenceOrder === 0) return 'Start'
+  return `+${offsetMinutes} min`
+}
 
-onMounted(async () => {
+// Maps a raw Supabase row (routes joined to route_stops -> stops) into
+// the shape the template below already expects.
+function mapRoute(row) {
+  const stops = (row.route_stops ?? [])
+    .slice()
+    .sort((a, b) => a.sequence_order - b.sequence_order)
+    .map((rs) => ({
+      name: rs.stops?.name ?? 'Unknown stop',
+      area: rs.stops?.area ?? '',
+      campus: rs.stops?.is_campus ?? false,
+      offset: formatOffset(rs.sequence_order, rs.offset_minutes)
+    }))
+
+  return {
+    id: row.id,
+    code: row.code,
+    title: row.name,
+    badgeClass: row.badge_class || `badge-${(row.code ?? '').toLowerCase()}`,
+    duration: row.duration_minutes,
+    frequency: row.frequency_minutes,
+    stops
+  }
+}
+
+async function loadRoutes() {
+  loading.value = true
+  loadError.value = ''
+
   const { data, error } = await supabase
     .from('routes')
-    .select('*')
-
-  if (error) {
-    console.error('Database connection error:', error.message)
-  } else {
-    routes.value = data
-  }
-})
-
-onMounted(async () => {
-  const { data, error } = await supabase
-    .from('routes') // This targets a table named 'routes' in your Supabase
-    .select('*')
+    .select(`
+      id,
+      code,
+      name,
+      badge_class,
+      duration_minutes,
+      frequency_minutes,
+      route_stops (
+        sequence_order,
+        offset_minutes,
+        kind,
+        stops ( name, area, is_campus )
+      )
+    `)
+    .order('code', { ascending: true })
+    .order('sequence_order', { foreignTable: 'route_stops', ascending: true })
 
   if (error) {
     console.error('Error fetching routes from Supabase:', error.message)
+    loadError.value = 'Could not load routes right now. Please try again shortly.'
   } else {
-    routes.value = data // This populates your page instantly with the database rows
+    routes.value = (data ?? []).map(mapRoute)
   }
-})
+  loading.value = false
+}
+
+onMounted(loadRoutes)
+
+function selectStop(name) {
+  selectedStop.value = name
+}
 
 const filteredRoutes = computed(() => {
   const q = query.value.trim().toLowerCase()
-  if (!q) return routes.value // Added .value here
+  if (!q) return routes.value
 
-  return routes.value // Added .value here
+  return routes.value
     .map((route) => {
-      const matchingStops = route.stops.filter((s) =>
+      const matchingStops = (route.stops ?? []).filter((s) =>
         `${s.name} ${s.area}`.toLowerCase().includes(q)
       )
-      const routeMatches = route.title.toLowerCase().includes(q)
+      const routeMatches = (route.title ?? '').toLowerCase().includes(q)
       if (routeMatches) return route
       if (matchingStops.length) return { ...route, stops: matchingStops }
       return null
