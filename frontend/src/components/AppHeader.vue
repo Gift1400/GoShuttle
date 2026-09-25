@@ -40,7 +40,8 @@ const navLinks = [
   { to: '/track', label: 'Track' },
   { to: '/schedule', label: 'Schedule' },
   { to: '/stops-routes', label: 'Stops & Routes' },
-  { to: '/pass', label: 'My Pass' }
+  { to: '/pass', label: 'My Pass' },
+  { to: '/driver-track', label: 'Driver Track' },
 ]
 
 function closeMenu() {

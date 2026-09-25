@@ -27,7 +27,7 @@
 .auth-logo {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
+  margin-bottom: 16px;
   width: 100%;
   height: auto;
   background: transparent;
@@ -265,7 +265,7 @@
 }
 
 .logo-image {
-  height: 250px;
+  height: 115px;
   width: auto;
   object-fit: contain;
   border-radius: 25px;
