@@ -2,98 +2,112 @@
   <div class="page pass-page">
     <div class="container pass-grid">
 
-      <!-- Pass card -->
-      <section class="pass-card">
-        <div class="pass-card-top">
-          <div class="brand">
-            <span class="brand-mark">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9"
-                stroke-linecap="round" stroke-linejoin="round">
+      <!-- Loading state -->
+      <div v-if="loading" class="glass loading-card">
+        <p>Loading your pass…</p>
+      </div>
+
+      <!-- Error state -->
+      <div v-else-if="loadError" class="glass loading-card error">
+        <p>{{ loadError }}</p>
+        <button class="btn btn-ghost" @click="loadPassData">Retry</button>
+      </div>
+
+      <!-- Pass content -->
+      <template v-else>
+        <!-- Pass card -->
+        <section class="pass-card">
+          <div class="pass-card-top">
+            <div class="brand">
+              <span class="brand-mark">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.9"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="5" width="16" height="12" rx="2.2" />
+                  <line x1="4" y1="11" x2="20" y2="11" />
+                </svg>
+              </span>
+              <span class="brand-name">GoShuttle</span>
+            </div>
+            <span class="status-pill" :class="passStatus.class">
+              <span class="status-dot"></span>
+              {{ passStatus.label }}
+            </span>
+          </div>
+
+          <h1 class="pass-name">{{ student.name }}</h1>
+
+          <button class="pass-id" type="button" :title="'Tap to copy Student ID'" @click="copyId">
+            Student ID · <span>{{ student.id }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+
+          <div class="pass-details">
+            <div class="pass-detail-group">
+              <div class="pass-field">
+                <span class="pass-label">Valid Until</span>
+                <span class="pass-value">{{ student.validUntil }}</span>
+              </div>
+              <div class="pass-field">
+                <span class="pass-label">Type</span>
+                <span class="pass-value">{{ student.type }}</span>
+              </div>
+            </div>
+            <div class="pass-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
                 <rect x="4" y="5" width="16" height="12" rx="2.2" />
                 <line x1="4" y1="11" x2="20" y2="11" />
+                <line x1="8" y1="5" x2="8" y2="11" />
+                <line x1="16" y1="5" x2="16" y2="11" />
+                <circle cx="7.5" cy="18.4" r="1.3" fill="currentColor" stroke="none" />
+                <circle cx="16.5" cy="18.4" r="1.3" fill="currentColor" stroke="none" />
               </svg>
-            </span>
-            <span class="brand-name">GoShuttle</span>
-          </div>
-          <span class="status-pill">
-            <span class="status-dot"></span>
-            Active
-          </span>
-        </div>
-
-        <h1 class="pass-name">{{ student.name }}</h1>
-
-        <button class="pass-id" type="button" :title="'Tap to copy Student ID'" @click="copyId">
-          Student ID · <span>{{ student.id }}</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-        </button>
-
-        <div class="pass-details">
-          <div class="pass-detail-group">
-            <div class="pass-field">
-              <span class="pass-label">Valid Until</span>
-              <span class="pass-value">{{ student.validUntil }}</span>
-            </div>
-            <div class="pass-field">
-              <span class="pass-label">Type</span>
-              <span class="pass-value">{{ student.type }}</span>
             </div>
           </div>
-          <div class="pass-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="5" width="16" height="12" rx="2.2" />
-              <line x1="4" y1="11" x2="20" y2="11" />
-              <line x1="8" y1="5" x2="8" y2="11" />
-              <line x1="16" y1="5" x2="16" y2="11" />
-              <circle cx="7.5" cy="18.4" r="1.3" fill="currentColor" stroke="none" />
-              <circle cx="16.5" cy="18.4" r="1.3" fill="currentColor" stroke="none" />
-            </svg>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Stats grid -->
-      <section class="stats-grid">
-        <div v-for="stat in stats" :key="stat.label" class="glass stat-card">
-          <div class="stat-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="5" width="16" height="12" rx="2.2" />
-              <line x1="4" y1="11" x2="20" y2="11" />
-              <line x1="8" y1="5" x2="8" y2="11" />
-              <line x1="16" y1="5" x2="16" y2="11" />
-            </svg>
-          </div>
-          <span class="stat-label">{{ stat.label }}</span>
-          <span class="stat-value">{{ stat.prefix || '' }}{{ stat.display }}</span>
-        </div>
-      </section>
-
-      <!-- How to use your pass -->
-      <section class="steps-section">
-        <h2 class="section-title">How to use your pass</h2>
-        <ul class="steps-list">
-          <li v-for="(step, index) in steps" :key="step.title" class="glass step-card"
-            :class="{ completed: step.completed }" @click="step.completed = !step.completed">
-            <span class="step-number">
-              <svg v-if="step.completed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
+        <!-- Stats grid -->
+        <section class="stats-grid">
+          <div v-for="stat in stats" :key="stat.label" class="glass stat-card">
+            <div class="stat-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="5" width="16" height="12" rx="2.2" />
+                <line x1="4" y1="11" x2="20" y2="11" />
+                <line x1="8" y1="5" x2="8" y2="11" />
+                <line x1="16" y1="5" x2="16" y2="11" />
               </svg>
-              <span v-else>{{ index + 1 }}</span>
-            </span>
-            <span class="step-body">
-              <span class="step-title">{{ step.title }}</span>
-              <span class="step-desc">{{ step.desc }}</span>
-            </span>
-          </li>
-        </ul>
-      </section>
+            </div>
+            <span class="stat-label">{{ stat.label }}</span>
+            <span class="stat-value">{{ stat.prefix || '' }}{{ stat.display }}</span>
+          </div>
+        </section>
+
+        <!-- How to use your pass -->
+        <section class="steps-section">
+          <h2 class="section-title">How to use your pass</h2>
+          <ul class="steps-list">
+            <li v-for="(step, index) in steps" :key="step.title" class="glass step-card"
+                :class="{ completed: step.completed }" @click="step.completed = !step.completed">
+              <span class="step-number">
+                <svg v-if="step.completed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span v-else>{{ index + 1 }}</span>
+              </span>
+              <span class="step-body">
+                <span class="step-title">{{ step.title }}</span>
+                <span class="step-desc">{{ step.desc }}</span>
+              </span>
+            </li>
+          </ul>
+        </section>
+      </template>
 
     </div>
 
@@ -104,22 +118,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { supabase } from '../supabaseClient'
 
-const student = {
-  name: 'Samukelisiwe M.',
-  id: '219344639',
-  validUntil: '31 Mar 2026',
-  type: 'Monthly'
-}
+const loading = ref(true)
+const loadError = ref('')
+const toastVisible = ref(false)
+let toastTimer = null
 
-const stats = reactive([
-  { label: 'Days Left', target: 34, display: 0 },
-  { label: 'Trips Used', target: 47, display: 0 },
-  { label: 'You Saved', target: 380, display: 0, prefix: 'R ' },
-  { label: 'Preferred Route', target: null, display: 'G1' }
-])
+const student = reactive({
+  name: '',
+  id: '',
+  validUntil: '',
+  type: ''
+})
 
+const stats = reactive([])
 const steps = reactive([
   {
     title: 'Check the schedule',
@@ -133,8 +147,21 @@ const steps = reactive([
   }
 ])
 
-const toastVisible = ref(false)
-let toastTimer = null
+const passStatus = computed(() => {
+  if (!student.validUntil) return { label: 'Unknown', class: 'status-off' }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const expiry = new Date(student.validUntil)
+  expiry.setHours(0, 0, 0, 0)
+
+  if (expiry < today) {
+    return { label: 'Expired', class: 'status-expired' }
+  }
+
+  return { label: 'Active', class: 'status-active' }
+})
 
 function copyId() {
   navigator.clipboard?.writeText(student.id).catch(() => { })
@@ -143,6 +170,107 @@ function copyId() {
   toastTimer = setTimeout(() => {
     toastVisible.value = false
   }, 1800)
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-ZA', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+}
+
+function daysRemaining(dateStr) {
+  if (!dateStr) return 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const expiry = new Date(dateStr)
+  expiry.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+  return Math.max(0, diff)
+}
+
+async function loadPassData() {
+  loading.value = true
+  loadError.value = ''
+
+  try {
+    // Get the current auth session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError) throw sessionError
+
+    if (!session) {
+      loadError.value = 'Please sign in to view your pass.'
+      loading.value = false
+      return
+    }
+
+    // Fetch the user profile from the users table
+    const { data: userProfile, error: userError } = await supabase
+        .from('users')
+        .select('full_name, student_number, email, campus_id')
+        .eq('email', session.user.email)
+        .single()
+
+    if (userError) throw userError
+
+    // Fetch the active pass for this user
+    const { data: passData, error: passError } = await supabase
+        .from('passes')
+        .select('pass_id, valid_from, valid_until, pass_type, status, trips_used, amount_saved, preferred_route_id')
+        .eq('user_id', session.user.id)
+        .order('valid_until', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (passError) throw passError
+
+    // Populate student info
+    student.name = userProfile.full_name || session.user.email?.split('@')[0] || 'Student'
+    student.id = userProfile.student_number || '—'
+
+    if (passData) {
+      student.validUntil = formatDate(passData.valid_until)
+      student.type = passData.pass_type || '—'
+    } else {
+      student.validUntil = '—'
+      student.type = 'No active pass'
+    }
+
+    // Populate stats
+    const remainingDays = daysRemaining(passData?.valid_until)
+
+    // Fetch preferred route name if we have a route id
+    let preferredRoute = '—'
+    if (passData?.preferred_route_id) {
+      const { data: routeData } = await supabase
+          .from('routes')
+          .select('code')
+          .eq('route_id', passData.preferred_route_id)
+          .maybeSingle()
+
+      if (routeData?.code) preferredRoute = routeData.code
+    }
+
+    stats.length = 0
+    stats.push(
+        { label: 'Days Left', target: remainingDays, display: 0 },
+        { label: 'Trips Used', target: passData?.trips_used ?? 0, display: 0 },
+        { label: 'You Saved', target: passData?.amount_saved ?? 0, display: 0, prefix: 'R ' },
+        { label: 'Preferred Route', target: null, display: preferredRoute }
+    )
+
+    // Animate the numeric stats
+    stats.forEach(animateCount)
+  } catch (err) {
+    console.error('Error loading pass data:', err)
+    loadError.value = 'Could not load your pass. Please try again shortly.'
+  } finally {
+    loading.value = false
+  }
 }
 
 function animateCount(stat) {
@@ -160,9 +288,7 @@ function animateCount(stat) {
   requestAnimationFrame(tick)
 }
 
-onMounted(() => {
-  stats.forEach(animateCount)
-})
+onMounted(loadPassData)
 </script>
 
 <style scoped>
@@ -175,6 +301,23 @@ onMounted(() => {
   grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   max-width: 800px;
+}
+
+.loading-card {
+  padding: 40px;
+  text-align: center;
+  color: white;
+  font-size: 15px;
+}
+
+.loading-card.error {
+  color: #ffb3b3;
+}
+
+.loading-card.error .btn {
+  margin-top: 16px;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Pass card */
@@ -242,6 +385,18 @@ onMounted(() => {
   height: 6px;
   border-radius: 50%;
   background: #4ade80;
+}
+
+.status-pill.status-active .status-dot {
+  background: #4ade80;
+}
+
+.status-pill.status-expired .status-dot {
+  background: #f87171;
+}
+
+.status-pill.status-off .status-dot {
+  background: #9ca3af;
 }
 
 .pass-name {

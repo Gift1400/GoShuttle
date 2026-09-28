@@ -13,7 +13,8 @@ public class BoardingController {
     private final BoardingService boardingCon;
 
     @Autowired
-    public BoardingController(BoardingService boardingServ){
+    public BoardingController(BoardingService boardingServ)
+    {
         this.boardingCon = boardingServ;
     }
     @PostMapping("/create")

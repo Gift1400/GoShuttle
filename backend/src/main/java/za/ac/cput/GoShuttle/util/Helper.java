@@ -15,6 +15,10 @@ public class Helper {
         return false;
     }
 
+    public static boolean isNull(Object value){
+        return value == null;
+    }
+
     public static boolean isEmpty(Long value) {
         return value == null;
     }
