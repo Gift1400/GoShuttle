@@ -2,51 +2,71 @@
   <div class="page home-page">
     <div class="container">
 
-      <!-- Hero -->
       <section class="hero">
         <span id="section-eyebrow">GoShuttle</span>
-        <h1>Good morning, {{ displayName }}</h1>
+        <h1>Welcome back, {{ displayName }}</h1>
         <p class="hero-sub">Track your bus, check schedules and manage your pass — all in one place.</p>
         <div class="hero-actions">
-          <router-link to="/track" class="btn btn-primary">Track my bus</router-link>
+          <router-link :to="liveTrackPath" class="btn btn-primary">Track my bus</router-link>
           <router-link to="/schedule" class="btn btn-ghost">View schedule</router-link>
         </div>
       </section>
 
-      <!-- Live trip card -->
-      <section class="glass live-card">
+      <section class="glass live-card" v-if="liveBus">
         <div class="live-top">
           <span class="live-pill">
             <span class="live-dot"></span>
             LIVE
           </span>
-          <router-link to="/track" class="live-link">Open live map →</router-link>
+          <router-link :to="liveTrackPath" class="live-link">Open live map →</router-link>
         </div>
 
-        <h2>Khayelitsha → CPUT Bellville</h2>
-        <p class="next-stop">Next stop: Site C Taxi Rank</p>
+        <h2>{{ liveBus.route }}</h2>
+        <p class="next-stop">Bus {{ liveBus.number }} · {{ liveBus.driver }}</p>
 
         <div class="live-stats">
           <div class="live-stat">
-            <span class="live-stat-label">Arrives in</span>
-            <span class="live-stat-value">6 min</span>
-          </div>
-          <div class="live-stat">
-            <span class="live-stat-label">To campus</span>
-            <span class="live-stat-value">28 min</span>
+            <span class="live-stat-label">Capacity</span>
+            <span class="live-stat-value">{{ liveBus.capacity }}%</span>
           </div>
           <div class="live-stat">
             <span class="live-stat-label">Status</span>
-            <span class="live-stat-value status-on-time">On Time</span>
+            <span
+                class="live-stat-value"
+                :class="liveBus.status === 'On Time' ? 'status-on-time' : 'status-delayed'"
+            >
+              {{ liveBus.status }}
+            </span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-label">Route</span>
+            <span class="live-stat-value">{{ liveBus.code }}</span>
           </div>
         </div>
       </section>
 
-      <!-- Upcoming buses -->
+      <!-- Fallback when nothing is live -->
+      <section class="glass live-card" v-else>
+        <div class="live-top">
+          <span class="live-pill" style="opacity: 0.6">
+            <span class="live-dot" style="animation: none; background: #888"></span>
+            OFFLINE
+          </span>
+        </div>
+        <h2>No bus currently live</h2>
+        <p class="next-stop">Check the schedule or try again later.</p>
+      </section>
+
+      <!-- Upcoming buses (unchanged) -->
       <section class="upcoming">
         <h2 class="section-title">Upcoming buses</h2>
         <div class="bus-grid">
-          <router-link v-for="bus in upcomingBuses" :key="bus.code" to="/schedule" class="glass bus-card">
+          <router-link
+              v-for="bus in upcomingBuses"
+              :key="bus.code"
+              to="/schedule"
+              class="glass bus-card"
+          >
             <span class="badge" :class="bus.badgeClass">{{ bus.code }}</span>
             <div class="bus-card-body">
               <h3>{{ bus.title }}</h3>
@@ -65,30 +85,100 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { supabase } from '../supabaseClient'
 
 const displayName = ref('Student')
+const liveBus = ref(null)
+let pollInterval = null
 
-onMounted(async () => {
-  const { data: { session } } = await supabase.auth.getSession()
+// Same mapping used on the tracking page
+const busData = {
+  1: {
+    code: 'G1',
+    number: 'GS-112',
+    route: 'Khayelitsha → CPUT Bellville',
+    status: 'On Time',
+    driver: 'Thabo M.',
+    capacity: 62
+  },
+  2: {
+    code: 'G2',
+    number: 'GS-205',
+    route: 'Mitchells Plain → CPUT Cape Town',
+    status: 'Delayed',
+    driver: 'Lerato K.',
+    capacity: 48
+  },
+  3: {
+    code: 'G3',
+    number: 'GS-318',
+    route: 'Kraaifontein → CPUT Bellville',
+    status: 'On Time',
+    driver: 'Sipho N.',
+    capacity: 55
+  }
+}
 
-  if (!session) {
-    displayName.value = 'Student'
+// Path used by the “Track my bus” and “Open live map” buttons
+const liveTrackPath = computed(() => {
+  if (!liveBus.value) return '/track'
+  const id = Object.keys(busData).find(
+      key => busData[key].number === liveBus.value.number
+  )
+  // convert bus_id (1/2/3) → g1/g2/g3
+  const routeId = id ? `g${id}` : 'g1'
+  return `/track/${routeId}`
+})
+
+async function loadLiveBus() {
+  // Get the most recently updated position
+  const { data, error } = await supabase
+      .from('live_trip')
+      .select('bus_id, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+
+  if (error || !data || data.length === 0) {
+    liveBus.value = null
     return
   }
 
-  const { data: profile } = await supabase
-      .from('users')
-      .select('full_name')
-      .eq('email', session.user.email)
-      .single()
+  const busId = data[0].bus_id
+  const info = busData[busId]
 
-  if (profile?.full_name) {
-    displayName.value = profile.full_name.split(' ')[0]
+  if (info) {
+    liveBus.value = { ...info }
   } else {
-    displayName.value = session.user.email?.split('@')[0] || 'Student'
+    liveBus.value = null
   }
+}
+
+onMounted(async () => {
+  // Load user name
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session) {
+    const { data: profile } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('email', session.user.email)
+        .single()
+
+    if (profile?.full_name) {
+      displayName.value = profile.full_name.split(' ')[0]
+    } else {
+      displayName.value = session.user.email?.split('@')[0] || 'Student'
+    }
+  }
+
+  // Load live bus + keep it fresh
+  await loadLiveBus()
+  pollInterval = setInterval(loadLiveBus, 15000) // refresh every 15 s
+})
+
+onUnmounted(() => {
+  if (pollInterval) clearInterval(pollInterval)
 })
 
 const upcomingBuses = [

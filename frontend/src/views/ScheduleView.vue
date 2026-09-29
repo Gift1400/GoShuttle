@@ -48,7 +48,12 @@
                 <span class="status-dot"></span>
                 {{ route.status === 'on-time' ? 'On Time' : 'Delayed' }}
               </span>
-
+              <button
+                  class="track-btn"
+                  @click.stop="goToTrack(route)"
+              >
+                Track
+              </button>
               <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -91,6 +96,7 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const query = ref('')
 const activeStatus = ref('all')
@@ -175,6 +181,15 @@ const filteredRoutes = computed(() => {
     return haystack.includes(q)
   })
 })
+
+const router = useRouter()
+
+function goToTrack(route) {
+  router.push({
+    name: 'Track',
+    params: { id: route.id }
+  })
+}
 </script>
 
 <style scoped>
@@ -501,5 +516,26 @@ const filteredRoutes = computed(() => {
   .status-pill {
     order: 3;
   }
+}
+.track-btn {
+  background: #1B3B73;
+  color: #fff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.track-btn:hover {
+  background: #254d96;
+}
+
+.track-btn:active {
+  transform: scale(0.97);
 }
 </style>
