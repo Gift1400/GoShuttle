@@ -14,6 +14,11 @@ const routes = [
     meta: { title: 'Live Tracking' }
   },
   {
+    path: '/track/:id?',
+    name: 'Track',
+    component: () => import('../views/TrackView.vue')
+  },
+  {
     path: '/schedule',
     name: 'schedule',
     component: () => import('../views/ScheduleView.vue'),

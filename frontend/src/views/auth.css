@@ -557,3 +557,20 @@
   }
 
 }
+.track-btn {
+  background: var(--navy-700);
+  color: #fff;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.track-btn:hover {
+  background: #1e4a8c;
+}
