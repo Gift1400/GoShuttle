@@ -36,7 +36,7 @@
 
           <h1 class="pass-name">{{ student.name }}</h1>
 
-          <button class="pass-id" type="button" :title="'Tap to copy Student ID'" @click="copyId">
+          <button class="pass-id" type="button" title="Tap to copy Student ID" @click="copyId">
             Student ID · <span>{{ student.id }}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round">
@@ -148,7 +148,9 @@ const steps = reactive([
 ])
 
 const passStatus = computed(() => {
-  if (!student.validUntil) return { label: 'Unknown', class: 'status-off' }
+  if (!student.validUntil || student.validUntil === '—') {
+    return { label: 'No Pass', class: 'status-off' }
+  }
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -164,6 +166,7 @@ const passStatus = computed(() => {
 })
 
 function copyId() {
+  if (!student.id || student.id === '—') return
   navigator.clipboard?.writeText(student.id).catch(() => { })
   toastVisible.value = true
   clearTimeout(toastTimer)
@@ -175,6 +178,7 @@ function copyId() {
 function formatDate(dateStr) {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('en-ZA', {
     day: '2-digit',
     month: 'short',
@@ -187,6 +191,7 @@ function daysRemaining(dateStr) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const expiry = new Date(dateStr)
+  if (isNaN(expiry.getTime())) return 0
   expiry.setHours(0, 0, 0, 0)
   const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
   return Math.max(0, diff)
@@ -197,7 +202,7 @@ async function loadPassData() {
   loadError.value = ''
 
   try {
-    // Get the current auth session
+    // 1. Get the current auth session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError) throw sessionError
@@ -208,48 +213,82 @@ async function loadPassData() {
       return
     }
 
-    // Fetch the user profile from the users table
+    // 2. Fetch the user profile from the users table
+    //    We match by email since that's how RegisterView inserts the record
     const { data: userProfile, error: userError } = await supabase
         .from('users')
-        .select('full_name, student_number, email, campus_id')
+        .select('full_name, student_number, email')
         .eq('email', session.user.email)
-        .single()
+        .maybeSingle()
 
-    if (userError) throw userError
+    if (userError) {
+      console.warn('Users table lookup failed:', userError.message)
+    }
 
-    // Fetch the active pass for this user
-    const { data: passData, error: passError } = await supabase
+    // Populate student info (fall back to auth metadata if users row is missing)
+    const meta = session.user.user_metadata || {}
+    student.name = userProfile?.full_name || meta.full_name || session.user.email?.split('@')[0] || 'Student'
+    student.id = userProfile?.student_number || meta.student_number || '—'
+
+    // 3. Fetch the most recent pass for this user
+    //    We try both by user_id (auth uuid) and by email, so it works with
+    //    whichever column your passes table actually uses.
+    let passData = null
+
+    const { data: passByUser, error: passUserError } = await supabase
         .from('passes')
-        .select('pass_id, valid_from, valid_until, pass_type, status, trips_used, amount_saved, preferred_route_id')
+        .select('*')
         .eq('user_id', session.user.id)
         .order('valid_until', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-    if (passError) throw passError
+    if (passUserError) {
+      console.warn('Pass lookup by user_id failed:', passUserError.message)
+    }
 
-    // Populate student info
-    student.name = userProfile.full_name || session.user.email?.split('@')[0] || 'Student'
-    student.id = userProfile.student_number || '—'
+    if (passByUser) {
+      passData = passByUser
+    } else if (student.id && student.id !== '—') {
+      // Fallback: match on student_number if that column exists on passes
+      const { data: passByStudent, error: passStudentError } = await supabase
+          .from('passes')
+          .select('*')
+          .eq('student_number', student.id)
+          .order('valid_until', { ascending: false })
+          .limit(1)
+          .maybeSingle()
 
+      if (passStudentError) {
+        console.warn('Pass lookup by student_number failed:', passStudentError.message)
+      }
+
+      if (passByStudent) passData = passByStudent
+    }
+
+    // 4. Populate pass fields, tolerating different column names
     if (passData) {
-      student.validUntil = formatDate(passData.valid_until)
-      student.type = passData.pass_type || '—'
+      const validUntil = passData.valid_until || passData.expiry_date || passData.expires_at || null
+      student.validUntil = formatDate(validUntil)
+      student.type = passData.pass_type || passData.type || passData.tier || '—'
     } else {
       student.validUntil = '—'
       student.type = 'No active pass'
     }
 
-    // Populate stats
-    const remainingDays = daysRemaining(passData?.valid_until)
+    // 5. Populate stats
+    const remainingDays = passData ? daysRemaining(passData.valid_until || passData.expiry_date) : 0
+    const tripsUsed = passData?.trips_used ?? 0
+    const amountSaved = passData?.amount_saved ?? 0
 
-    // Fetch preferred route name if we have a route id
+    // Resolve preferred route code (if we have an id)
     let preferredRoute = '—'
-    if (passData?.preferred_route_id) {
+    const routeId = passData?.preferred_route_id || passData?.route_id
+    if (routeId) {
       const { data: routeData } = await supabase
           .from('routes')
           .select('code')
-          .eq('route_id', passData.preferred_route_id)
+          .eq('route_id', routeId)
           .maybeSingle()
 
       if (routeData?.code) preferredRoute = routeData.code
@@ -258,12 +297,11 @@ async function loadPassData() {
     stats.length = 0
     stats.push(
         { label: 'Days Left', target: remainingDays, display: 0 },
-        { label: 'Trips Used', target: passData?.trips_used ?? 0, display: 0 },
-        { label: 'You Saved', target: passData?.amount_saved ?? 0, display: 0, prefix: 'R ' },
+        { label: 'Trips Used', target: tripsUsed, display: 0 },
+        { label: 'You Saved', target: amountSaved, display: 0, prefix: 'R ' },
         { label: 'Preferred Route', target: null, display: preferredRoute }
     )
 
-    // Animate the numeric stats
     stats.forEach(animateCount)
   } catch (err) {
     console.error('Error loading pass data:', err)
