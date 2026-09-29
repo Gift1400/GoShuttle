@@ -13,8 +13,7 @@ public class RoutesFactory {
 
         if(Helper.isNull(routesId)
         && Helper.isNull(frequencyMinute)
-        && Helper.isNull(durationMinutes)
-        && Helper.isNullorEmpty(name)){
+        && Helper.isNull(durationMinutes)){
             return null;
         }
 

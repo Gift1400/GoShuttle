@@ -8,12 +8,6 @@ import java.util.List;
 
 public class Helper {
 
-    public static boolean isNullorEmpty(String value){
-        if(value == null){
-            return true;
-        }
-        return false;
-    }
 
     public static boolean isNull(Object value){
         return value == null;

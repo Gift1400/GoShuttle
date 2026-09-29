@@ -5,7 +5,16 @@
 
         <section class="glass driver-card">
           <h1>Driver Live Tracking</h1>
-          <p class="subtitle">This page sends your phone's GPS location to the system.</p>
+          <p class="subtitle">Sends your phone's GPS location to the system.</p>
+
+          <div class="field">
+            <label for="routeSelect">Select route</label>
+            <select id="routeSelect" v-model="selectedRoute">
+              <option value="g1">G1 – Khayelitsha → CPUT Bellville</option>
+              <option value="g2">G2 – Mitchells Plain → CPUT Cape Town</option>
+              <option value="g3">G3 – Kraaifontein → CPUT Bellville</option>
+            </select>
+          </div>
 
           <div class="status-box" :class="statusClass">
             {{ statusText }}
@@ -24,11 +33,6 @@
             Stop Sharing
           </button>
 
-
-          <button class="btn btn-ghost" @click="stopTracking" v-if="tracking" style="margin-top: 12px;">
-            Stop Sharing
-          </button>
-
           <button class="btn btn-ghost" @click="clearTrip" style="margin-top: 12px;">
             Start New Trip
           </button>
@@ -37,6 +41,15 @@
         <section class="glass manual-card">
           <h1>Manual Location Update</h1>
           <p class="subtitle">Set the bus's current coordinates directly.</p>
+
+          <div class="field">
+            <label for="manualRouteSelect">Select route</label>
+            <select id="manualRouteSelect" v-model="selectedRoute">
+              <option value="g1">G1 – Khayelitsha → CPUT Bellville</option>
+              <option value="g2">G2 – Mitchells Plain → CPUT Cape Town</option>
+              <option value="g3">G3 – Kraaifontein → CPUT Bellville</option>
+            </select>
+          </div>
 
           <div class="status-box" :class="manualStatusClass">
             {{ manualStatusText }}
@@ -63,9 +76,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { supabase } from '../supabaseClient'
-import { onMounted } from 'vue'
+
+const STORAGE_KEY = 'goshuttle_driver_route'
 
 const tracking = ref(false)
 const lat = ref(null)
@@ -73,19 +87,43 @@ const lng = ref(null)
 const statusText = ref('Not sharing location')
 const statusClass = ref('status-off')
 
+const selectedRoute = ref(localStorage.getItem(STORAGE_KEY) || 'g1')
+
+const routeMap = {
+  g1: { bus_id: 1, route_id: 1, label: 'Khayelitsha → CPUT Bellville' },
+  g2: { bus_id: 2, route_id: 2, label: 'Mitchells Plain → CPUT Cape Town' },
+  g3: { bus_id: 3, route_id: 3, label: 'Kraaifontein → CPUT Bellville' }
+}
+
+const current = computed(() => routeMap[selectedRoute.value])
+
+watch(selectedRoute, (value) => {
+  localStorage.setItem(STORAGE_KEY, value)
+})
+
 let watchId = null
 
+function distanceMetres(lat1, lng1, lat2, lng2) {
+  const R = 6371000
+  const toRad = (d) => (d * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 async function startTracking() {
   if (!navigator.geolocation) {
     statusText.value = 'Geolocation is not supported on this device'
     statusClass.value = 'status-error'
-    await supabase
-        .from('live_trip')
-        .delete()
-        .eq('bus_id', 1)
-
     return
+  }
+
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId)
+    watchId = null
   }
 
   statusText.value = 'Requesting permission…'
@@ -93,17 +131,34 @@ async function startTracking() {
 
   watchId = navigator.geolocation.watchPosition(
       async (position) => {
-        lat.value = position.coords.latitude
-        lng.value = position.coords.longitude
+        const newLat = position.coords.latitude
+        const newLng = position.coords.longitude
+        const accuracy = position.coords.accuracy
+
+        const isFirst = lat.value === null || lng.value === null
+
+        if (!isFirst) {
+          if (accuracy > 100) {
+            statusText.value = `GPS weak (±${Math.round(accuracy)} m). Waiting for better signal…`
+            statusClass.value = 'status-pending'
+            return
+          }
+
+          const dist = distanceMetres(lat.value, lng.value, newLat, newLng)
+          if (dist < 40) return
+        }
+
+        lat.value = newLat
+        lng.value = newLng
         tracking.value = true
-        statusText.value = 'Sharing live location'
+        statusText.value = `Sharing live location (${current.value.label}) · ±${Math.round(accuracy)} m`
         statusClass.value = 'status-on'
 
         const { error } = await supabase
             .from('live_trip')
             .insert({
-              bus_id: 1,
-              route_id: 1,
+              bus_id: current.value.bus_id,
+              route_id: current.value.route_id,
               lat: lat.value,
               lng: lng.value,
               updated_at: new Date().toISOString()
@@ -117,29 +172,23 @@ async function startTracking() {
       },
       (error) => {
         tracking.value = false
-        statusText.value = 'Error: ' + error.message
+        if (error.code === 1) {
+          statusText.value = 'Location blocked. Allow it in browser settings.'
+        } else if (error.code === 2) {
+          statusText.value = 'Position unavailable. Try a phone outdoors, or use Manual Update.'
+        } else if (error.code === 3) {
+          statusText.value = 'Location timed out. Try again or use Manual Update.'
+        } else {
+          statusText.value = 'Error: ' + error.message
+        }
         statusClass.value = 'status-error'
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 3000,
-        timeout: 15000
+        maximumAge: 0,
+        timeout: 20000
       }
   )
-}
-async function clearTrip() {
-  const { error } = await supabase
-      .from('live_trip')
-      .delete()
-      .eq('bus_id', 1)
-
-  if (error) {
-    console.error(error)
-    return
-  }
-
-  manualStatusText.value = 'Trip cleared successfully'
-  manualStatusClass.value = 'status-on'
 }
 
 function stopTracking() {
@@ -150,6 +199,29 @@ function stopTracking() {
   tracking.value = false
   statusText.value = 'Stopped sharing location'
   statusClass.value = 'status-off'
+}
+
+async function clearTrip() {
+  const { data, error } = await supabase
+      .from('live_trip')
+      .delete()
+      .eq('bus_id', current.value.bus_id)
+      .eq('route_id', current.value.route_id)
+      .select()
+
+  if (error) {
+    console.error(error)
+    manualStatusText.value = 'Error clearing trip: ' + error.message
+    manualStatusClass.value = 'status-error'
+    return
+  }
+
+  const count = data?.length ?? 0
+  manualStatusText.value =
+      count > 0
+          ? `Cleared ${count} point(s) for ${current.value.label}`
+          : `No points found for ${current.value.label}`
+  manualStatusClass.value = count > 0 ? 'status-on' : 'status-pending'
 }
 
 const manualLat = ref(null)
@@ -172,13 +244,12 @@ async function updateManualLocation() {
   const { error } = await supabase
       .from('live_trip')
       .insert({
-    bus_id: 1,
-    route_id: 1,
-    lat: Number(manualLat.value),
-    lng: Number(manualLng.value),
-    updated_at: new Date().toISOString()
-  })
-
+        bus_id: current.value.bus_id,
+        route_id: current.value.route_id,
+        lat: Number(manualLat.value),
+        lng: Number(manualLng.value),
+        updated_at: new Date().toISOString()
+      })
 
   manualSaving.value = false
 
@@ -189,7 +260,7 @@ async function updateManualLocation() {
     return
   }
 
-  manualStatusText.value = 'Location updated successfully'
+  manualStatusText.value = `Location updated for ${current.value.label}`
   manualStatusClass.value = 'status-on'
 }
 </script>
@@ -226,7 +297,7 @@ async function updateManualLocation() {
 
 .subtitle {
   font-size: 14px;
-  color: #666;
+  color: ghostwhite;
   margin-bottom: 24px;
 }
 
@@ -260,12 +331,14 @@ async function updateManualLocation() {
   margin-bottom: 6px;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid rgba(23, 34, 63, 0.12);
   border-radius: 10px;
   font-size: 14px;
+  background: #fff;
 }
 
 .btn { width: 100%; }

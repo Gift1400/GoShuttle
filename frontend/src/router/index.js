@@ -14,6 +14,11 @@ const routes = [
     meta: { title: 'Live Tracking' }
   },
   {
+    path: '/track/:id?',
+    name: 'Track',
+    component: () => import('../views/TrackView.vue')
+  },
+  {
     path: '/schedule',
     name: 'schedule',
     component: () => import('../views/ScheduleView.vue'),
@@ -51,7 +56,7 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('../views/NotFoundView.vue'),
+    component: () => import('../views/OpeningView.vue'),
     meta: { title: 'Page not found' }
   }
 ]
