@@ -108,14 +108,10 @@ const busData = {
 
 function resolveBusId() {
   const fromUrl = route.params.id
-  if (fromUrl && busData[fromUrl]) {
-    return fromUrl
-  }
+  if (fromUrl && busData[fromUrl]) return fromUrl
 
   const fromStorage = localStorage.getItem(STORAGE_KEY)
-  if (fromStorage && busData[fromStorage]) {
-    return fromStorage
-  }
+  if (fromStorage && busData[fromStorage]) return fromStorage
 
   return 'g1'
 }
@@ -140,6 +136,19 @@ let busMarker = null
 let routingControl = null
 let refreshInterval = null
 let stopMarkers = []
+let hasFittedBounds = false
+let lastPointCount = 0
+
+function distanceMetres(lat1, lng1, lat2, lng2) {
+  const R = 6371000
+  const toRad = (d) => (d * Math.PI) / 180
+  const dLat = toRad(lat2 - lat1)
+  const dLng = toRad(lng2 - lng1)
+  const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
 
 async function loadCurrentPosition() {
   if (!map) return
@@ -161,17 +170,39 @@ async function loadCurrentPosition() {
 
   const coordinates = data.map(p => L.latLng(p.lat, p.lng))
   const currentPos = coordinates[coordinates.length - 1]
+  const pointCount = coordinates.length
 
-  // Bus marker (current position)
+  // Update marker only if it moved enough (≥ 20 m)
   if (!busMarker) {
     busMarker = L.marker(currentPos)
         .addTo(map)
         .bindPopup(`${bus.value.number} • ${bus.value.status}`)
         .openPopup()
   } else {
-    busMarker.setLatLng(currentPos)
+    const prev = busMarker.getLatLng()
+    const moved = distanceMetres(prev.lat, prev.lng, currentPos.lat, currentPos.lng)
+    if (moved >= 20) {
+      busMarker.setLatLng(currentPos)
+    }
     busMarker.setPopupContent(`${bus.value.number} • ${bus.value.status}`)
   }
+
+  // Only one point
+  if (pointCount < 2) {
+    if (!hasFittedBounds) {
+      map.setView(currentPos, 15)
+      hasFittedBounds = true
+    }
+    lastPointCount = pointCount
+    return
+  }
+
+  // No new points → marker already handled, stop
+  if (pointCount === lastPointCount && routingControl) {
+    return
+  }
+
+  lastPointCount = pointCount
 
   // History dots
   stopMarkers.forEach(m => map.removeLayer(m))
@@ -179,9 +210,7 @@ async function loadCurrentPosition() {
 
   coordinates.forEach((pos, index) => {
     if (index === coordinates.length - 1) return
-
     const isFirst = index === 0
-
     const circle = L.circleMarker(pos, {
       radius: isFirst ? 7 : 6,
       color: isFirst ? '#22c55e' : '#3295EB',
@@ -191,16 +220,10 @@ async function loadCurrentPosition() {
     })
         .addTo(map)
         .bindPopup(isFirst ? 'Start' : `Stop ${index}`)
-
     stopMarkers.push(circle)
   })
 
-  if (coordinates.length < 2) {
-    map.setView(currentPos, 15)
-    return
-  }
-
-  // Clear previous route
+  // Rebuild route only when point count changed
   if (routingControl) {
     map.removeControl(routingControl)
     routingControl = null
@@ -210,7 +233,6 @@ async function loadCurrentPosition() {
     window.routeLine = null
   }
 
-  // Only last 20 points for OSRM
   const waypoints = coordinates.slice(-20)
 
   routingControl = L.Routing.control({
@@ -231,31 +253,34 @@ async function loadCurrentPosition() {
 
   routingControl.on('routesfound', (e) => {
     const r = e.routes[0]
-    if (r?.coordinates?.length) {
+    if (r?.coordinates?.length && !hasFittedBounds) {
       map.fitBounds(L.latLngBounds(r.coordinates), { padding: [40, 40] })
+      hasFittedBounds = true
     }
   })
 
   routingControl.on('routingerror', () => {
-    console.warn('OSRM failed – falling back to straight polyline')
-
     if (routingControl) {
       map.removeControl(routingControl)
       routingControl = null
     }
-
     window.routeLine = L.polyline(coordinates, {
       color: '#1B3B73',
       weight: 5,
       opacity: 0.85
     }).addTo(map)
-
-    map.fitBounds(window.routeLine.getBounds(), { padding: [40, 40] })
+    if (!hasFittedBounds) {
+      map.fitBounds(window.routeLine.getBounds(), { padding: [40, 40] })
+      hasFittedBounds = true
+    }
   })
 }
 
 async function startTracking() {
   if (!map) return
+
+  hasFittedBounds = false
+  lastPointCount = 0
 
   if (refreshInterval) {
     clearInterval(refreshInterval)
@@ -323,26 +348,19 @@ onMounted(async () => {
 watch(
     () => route.params.id,
     async () => {
-      if (map) {
-        await startTracking()
-      }
+      if (map) await startTracking()
     }
 )
 
 onUnmounted(() => {
   if (refreshInterval) clearInterval(refreshInterval)
-
   stopMarkers.forEach(m => map.removeLayer(m))
   stopMarkers = []
-
-  if (routingControl) {
-    map.removeControl(routingControl)
-  }
+  if (routingControl) map.removeControl(routingControl)
   if (window.routeLine && map) {
     map.removeLayer(window.routeLine)
     window.routeLine = null
   }
-
   if (map) {
     map.remove()
     map = null
@@ -399,14 +417,8 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.3);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
 }
 
 .track-grid {
