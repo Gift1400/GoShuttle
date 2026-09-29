@@ -11,7 +11,7 @@ public class RouteStopsFactory {
         if(Helper.isNull(routeStopId)
         && Helper.isNull(sequenceOrder)
         && Helper.isNull(offsetMinutes)
-        && Helper.isNullorEmpty(kind)){
+        ){
             return null;
         }
 
