@@ -54,6 +54,12 @@ const routes = [
     component: () => import('../views/DriverTrackView.vue')
   },
   {
+    path: '/payment',
+    name: 'Payment',
+    component: () => import('../views/PaymentView.vue'),
+    meta: { title: 'Payment' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('../views/OpeningView.vue'),

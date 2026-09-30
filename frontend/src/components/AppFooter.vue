@@ -20,7 +20,7 @@ const year = new Date().getFullYear()
 <style scoped>
 .site-footer {
   border-top: 1px solid var(--divider);
-  background: rgb(0, 0, 0);
+  background: #072A66;
 
 }
 

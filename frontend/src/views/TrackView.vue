@@ -436,6 +436,8 @@ onUnmounted(() => {
 
 .info-card {
   padding: 26px 28px;
+  background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 45%, var(--green-600) 100%);
+
 }
 
 .info-row {
@@ -495,6 +497,7 @@ onUnmounted(() => {
 
 .map-card {
   padding: 20px;
+
 }
 
 .map-container {
@@ -502,6 +505,7 @@ onUnmounted(() => {
   height: 420px;
   border-radius: 14px;
   overflow: hidden;
+
 }
 
 @media (max-width: 820px) {

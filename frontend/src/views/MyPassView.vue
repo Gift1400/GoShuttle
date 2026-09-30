@@ -2,20 +2,16 @@
   <div class="page pass-page">
     <div class="container pass-grid">
 
-      <!-- Loading state -->
       <div v-if="loading" class="glass loading-card">
         <p>Loading your pass…</p>
       </div>
 
-      <!-- Error state -->
       <div v-else-if="loadError" class="glass loading-card error">
         <p>{{ loadError }}</p>
         <button class="btn btn-ghost" @click="loadPassData">Retry</button>
       </div>
 
-      <!-- Pass content -->
       <template v-else>
-        <!-- Pass card -->
         <section class="pass-card">
           <div class="pass-card-top">
             <div class="brand">
@@ -70,7 +66,12 @@
           </div>
         </section>
 
-        <!-- Stats grid -->
+        <section class="pass-actions">
+          <router-link to="/payment" class="btn btn-primary pay-btn">
+            Buy or renew pass
+          </router-link>
+        </section>
+
         <section class="stats-grid">
           <div v-for="stat in stats" :key="stat.label" class="glass stat-card">
             <div class="stat-icon">
@@ -87,15 +88,19 @@
           </div>
         </section>
 
-        <!-- How to use your pass -->
         <section class="steps-section">
           <h2 class="section-title">How to use your pass</h2>
           <ul class="steps-list">
-            <li v-for="(step, index) in steps" :key="step.title" class="glass step-card"
-                :class="{ completed: step.completed }" @click="step.completed = !step.completed">
+            <li
+                v-for="(step, index) in steps"
+                :key="step.title"
+                class="glass step-card"
+                :class="{ completed: step.completed }"
+                @click="step.completed = !step.completed"
+            >
               <span class="step-number">
-                <svg v-if="step.completed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <svg v-if="step.completed" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <span v-else>{{ index + 1 }}</span>
@@ -167,7 +172,7 @@ const passStatus = computed(() => {
 
 function copyId() {
   if (!student.id || student.id === '—') return
-  navigator.clipboard?.writeText(student.id).catch(() => { })
+  navigator.clipboard?.writeText(student.id).catch(() => {})
   toastVisible.value = true
   clearTimeout(toastTimer)
   toastTimer = setTimeout(() => {
@@ -202,9 +207,7 @@ async function loadPassData() {
   loadError.value = ''
 
   try {
-    // 1. Get the current auth session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
     if (sessionError) throw sessionError
 
     if (!session) {
@@ -213,84 +216,59 @@ async function loadPassData() {
       return
     }
 
-    // 2. Fetch the user profile from the users table
-    //    We match by email since that's how RegisterView inserts the record
+    // PK is user_id (not id)
     const { data: userProfile, error: userError } = await supabase
         .from('users')
-        .select('full_name, student_number, email')
+        .select('user_id, full_name, student_number, email')
         .eq('email', session.user.email)
         .maybeSingle()
 
     if (userError) {
-      console.warn('Users table lookup failed:', userError.message)
+      console.warn('Users lookup failed:', userError.message)
     }
 
-    // Populate student info (fall back to auth metadata if users row is missing)
     const meta = session.user.user_metadata || {}
-    student.name = userProfile?.full_name || meta.full_name || session.user.email?.split('@')[0] || 'Student'
+    student.name =
+        userProfile?.full_name ||
+        meta.full_name ||
+        session.user.email?.split('@')[0] ||
+        'Student'
     student.id = userProfile?.student_number || meta.student_number || '—'
 
-    // 3. Fetch the most recent pass for this user
-    //    We try both by user_id (auth uuid) and by email, so it works with
-    //    whichever column your passes table actually uses.
     let passData = null
 
-    const { data: passByUser, error: passUserError } = await supabase
-        .from('passes')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('valid_until', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-    if (passUserError) {
-      console.warn('Pass lookup by user_id failed:', passUserError.message)
-    }
-
-    if (passByUser) {
-      passData = passByUser
-    } else if (student.id && student.id !== '—') {
-      // Fallback: match on student_number if that column exists on passes
-      const { data: passByStudent, error: passStudentError } = await supabase
+    if (userProfile?.user_id != null) {
+      const { data: passByUser, error: passErr } = await supabase
           .from('passes')
           .select('*')
-          .eq('student_number', student.id)
+          .eq('user_id', userProfile.user_id)
           .order('valid_until', { ascending: false })
           .limit(1)
           .maybeSingle()
 
-      if (passStudentError) {
-        console.warn('Pass lookup by student_number failed:', passStudentError.message)
-      }
-
-      if (passByStudent) passData = passByStudent
+      if (passErr) console.warn('Pass lookup failed:', passErr.message)
+      if (passByUser) passData = passByUser
     }
 
-    // 4. Populate pass fields, tolerating different column names
     if (passData) {
-      const validUntil = passData.valid_until || passData.expiry_date || passData.expires_at || null
-      student.validUntil = formatDate(validUntil)
-      student.type = passData.pass_type || passData.type || passData.tier || '—'
+      student.validUntil = formatDate(passData.valid_until)
+      student.type = passData.pass_type || '—'
     } else {
       student.validUntil = '—'
       student.type = 'No active pass'
     }
 
-    // 5. Populate stats
-    const remainingDays = passData ? daysRemaining(passData.valid_until || passData.expiry_date) : 0
+    const remainingDays = passData ? daysRemaining(passData.valid_until) : 0
     const tripsUsed = passData?.trips_used ?? 0
-    const amountSaved = passData?.amount_saved ?? 0
+    const amountSaved = Number(passData?.amount_saved ?? 0)
 
-    // Resolve preferred route code (if we have an id)
     let preferredRoute = '—'
-    const routeId = passData?.preferred_route_id || passData?.route_id
-    if (routeId) {
+    if (passData?.route_id) {
       const { data: routeData } = await supabase
           .from('routes')
           .select('code')
-          .eq('route_id', routeId)
+          .eq('route_id', passData.route_id)
           .maybeSingle()
-
       if (routeData?.code) preferredRoute = routeData.code
     }
 
@@ -301,7 +279,6 @@ async function loadPassData() {
         { label: 'You Saved', target: amountSaved, display: 0, prefix: 'R ' },
         { label: 'Preferred Route', target: null, display: preferredRoute }
     )
-
     stats.forEach(animateCount)
   } catch (err) {
     console.error('Error loading pass data:', err)
@@ -358,7 +335,6 @@ onMounted(loadPassData)
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Pass card */
 .pass-card {
   background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 45%, var(--green-600) 100%);
   border-radius: var(--radius-lg);
@@ -425,17 +401,9 @@ onMounted(loadPassData)
   background: #4ade80;
 }
 
-.status-pill.status-active .status-dot {
-  background: #4ade80;
-}
-
-.status-pill.status-expired .status-dot {
-  background: #f87171;
-}
-
-.status-pill.status-off .status-dot {
-  background: #9ca3af;
-}
+.status-pill.status-active .status-dot { background: #4ade80; }
+.status-pill.status-expired .status-dot { background: #f87171; }
+.status-pill.status-off .status-dot { background: #9ca3af; }
 
 .pass-name {
   font-size: 25px;
@@ -460,14 +428,8 @@ onMounted(loadPassData)
   transition: color 0.15s ease;
 }
 
-.pass-id:hover {
-  color: #fff;
-}
-
-.pass-id span {
-  font-weight: 700;
-  color: #fff;
-}
+.pass-id:hover { color: #fff; }
+.pass-id span { font-weight: 700; color: #fff; }
 
 .pass-details {
   display: flex;
@@ -509,7 +471,19 @@ onMounted(loadPassData)
   flex-shrink: 0;
 }
 
-/* Stats grid */
+.pass-actions {
+  display: flex;
+}
+
+.pay-btn {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -546,7 +520,6 @@ onMounted(loadPassData)
   color: white;
 }
 
-/* Steps */
 .section-title {
   font-size: 17px;
   font-weight: 800;
@@ -585,7 +558,6 @@ onMounted(loadPassData)
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.15s ease;
 }
 
 .step-card.completed .step-number {
@@ -602,7 +574,6 @@ onMounted(loadPassData)
   font-size: 14.5px;
   font-weight: 700;
   color: white;
-  transition: color 0.15s ease;
 }
 
 .step-card.completed .step-title {
@@ -614,14 +585,12 @@ onMounted(loadPassData)
   font-size: 12.5px;
   color: rgb(213, 212, 212);
   line-height: 1.45;
-  transition: opacity 0.15s ease;
 }
 
 .step-card.completed .step-desc {
   opacity: 0.65;
 }
 
-/* Toast */
 .toast {
   position: fixed;
   left: 50%;
@@ -642,11 +611,7 @@ onMounted(loadPassData)
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.toast-fade-enter-from {
-  opacity: 0;
-  transform: translateX(-50%) translateY(8px);
-}
-
+.toast-fade-enter-from,
 .toast-fade-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(8px);
