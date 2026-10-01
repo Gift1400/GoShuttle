@@ -242,7 +242,6 @@ const upcomingBuses = [
   flex-wrap: wrap;
 }
 
-/* Live card */
 .live-card {
   padding: 26px 28px;
   margin-bottom: 40px;
