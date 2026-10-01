@@ -276,10 +276,10 @@ async function updateManualLocation() {
 
 .driver-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 20px;
-  max-width: 900px;
   width: 100%;
+  max-width: 1100px;
 }
 
 .driver-card,
@@ -347,5 +347,110 @@ async function updateManualLocation() {
   .driver-grid {
     grid-template-columns: 1fr;
   }
+}
+* {
+  box-sizing: border-box;
+}
+@media (max-width: 1024px) {
+
+  .driver-grid {
+    max-width: 100%;
+  }
+
+  .driver-card,
+  .manual-card {
+    padding: 24px;
+  }
+}
+@media (max-width: 820px) {
+
+  .driver-page {
+    padding: 24px 16px;
+  }
+
+  .driver-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .driver-card,
+  .manual-card {
+    padding: 22px;
+  }
+}
+@media (max-width: 600px) {
+
+  .driver-page {
+    padding: 16px 12px;
+    align-items: flex-start;
+  }
+
+  .driver-card,
+  .manual-card {
+    padding: 20px 16px;
+  }
+
+  .driver-card h1,
+  .manual-card h1 {
+    font-size: 20px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .status-box {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .coords {
+    font-size: 13px;
+    word-break: break-word;
+  }
+
+  .field input,
+  .field select {
+    font-size: 16px;
+  }
+}
+@media (max-width: 480px) {
+
+  .driver-card,
+  .manual-card {
+    padding: 16px;
+  }
+
+  .driver-card h1,
+  .manual-card h1 {
+    font-size: 18px;
+  }
+
+  .subtitle {
+    margin-bottom: 18px;
+  }
+
+  .field label {
+    font-size: 12px;
+  }
+
+  .field input,
+  .field select {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .coords p {
+    margin-bottom: 6px;
+  }
+}
+.status-box {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 </style>

@@ -307,6 +307,15 @@ onMounted(loadPassData)
 </script>
 
 <style scoped>
+* {
+  box-sizing: border-box;
+}
+.pass-card,
+.stat-card,
+.step-card {
+  width: 100%;
+  overflow-wrap: break-word;
+}
 .pass-page {
   padding-top: 48px;
 }
@@ -486,7 +495,7 @@ onMounted(loadPassData)
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
 }
 
@@ -620,6 +629,151 @@ onMounted(loadPassData)
 @media (min-width: 720px) {
   .pass-grid {
     max-width: 720px;
+  }
+}
+@media (max-width: 1024px) {
+  .pass-grid {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+
+  .pass-card {
+    padding: 24px;
+  }
+}
+@media (max-width: 768px) {
+
+  .pass-page {
+    padding-top: 24px;
+  }
+
+  .pass-grid {
+    gap: 16px;
+  }
+
+  .pass-card {
+    padding: 20px;
+  }
+
+  .pass-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .pass-name {
+    font-size: 22px;
+  }
+
+  .pass-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .pass-detail-group {
+    width: 100%;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .pass-icon-box {
+    width: 48px;
+    height: 48px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-btn {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+
+  .pass-name {
+    font-size: 20px;
+  }
+
+  .pass-detail-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pass-field {
+    width: 100%;
+  }
+
+  .status-pill {
+    font-size: 10px;
+    padding: 6px 10px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .step-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .step-title {
+    font-size: 14px;
+  }
+
+  .step-desc {
+    font-size: 12px;
+  }
+}
+@media (max-width: 480px) {
+
+  .pass-page {
+    padding-top: 16px;
+  }
+
+  .pass-card {
+    padding: 18px;
+  }
+
+  .pass-name {
+    font-size: 18px;
+    word-break: break-word;
+  }
+
+  .pass-id {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .brand-name {
+    font-size: 13px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 20px;
+    transform: none;
+    text-align: center;
   }
 }
 </style>

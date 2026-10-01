@@ -36,7 +36,13 @@
 
           <div class="field">
             <label for="cardName">Name on card</label>
-            <input id="cardName" v-model="form.cardName" type="text" placeholder="As on your card" />
+            <input
+                id="cardName"
+                v-model="form.cardName"
+                type="text"
+                placeholder="As on your card"
+                autocomplete="cc-name"
+            />
           </div>
 
           <div class="field">
@@ -47,6 +53,8 @@
                 type="text"
                 maxlength="19"
                 placeholder="xxxx xxxx xxxx xxxx"
+                inputmode="numeric"
+                autocomplete="cc-number"
                 @input="formatCardNumber"
             />
           </div>
@@ -54,11 +62,27 @@
           <div class="field-row">
             <div class="field">
               <label for="expiry">Expiry</label>
-              <input id="expiry" v-model="form.expiry" type="text" maxlength="5" placeholder="MM/YY" />
+              <input
+                  id="expiry"
+                  v-model="form.expiry"
+                  type="text"
+                  maxlength="5"
+                  placeholder="MM/YY"
+                  inputmode="numeric"
+                  autocomplete="cc-exp"
+              />
             </div>
             <div class="field">
               <label for="cvv">CVV</label>
-              <input id="cvv" v-model="form.cvv" type="password" maxlength="4" placeholder="•••" />
+              <input
+                  id="cvv"
+                  v-model="form.cvv"
+                  type="password"
+                  maxlength="4"
+                  placeholder="•••"
+                  inputmode="numeric"
+                  autocomplete="cc-csc"
+              />
             </div>
           </div>
 
@@ -93,7 +117,7 @@
 
           <p class="summary-note">
             Demo payment only — no real card is charged. A row is written to your
-            <code>passes</code> table on success.
+            <code>passes</code> table on success and a confirmation email is sent.
           </p>
         </section>
 
@@ -198,7 +222,6 @@ async function pay() {
       return
     }
 
-    // PK is user_id (not id)
     const { data: userRow, error: userErr } = await supabase
         .from('users')
         .select('user_id')
@@ -210,19 +233,20 @@ async function pay() {
           'Could not find your user profile. Sign in with the same email used at registration.'
       statusClass.value = 'status-error'
       paying.value = false
-      console.warn('Login email:', session.user.email, userErr)
       return
     }
 
     const now = new Date()
     const validUntil = addMonths(now, validityMonths[form.passType])
+    const validFromStr = toDateOnly(now)
+    const validUntilStr = toDateOnly(validUntil)
 
     const { error } = await supabase.from('passes').insert({
       user_id: userRow.user_id,
       route_id: Number(form.routeId),
       pass_type: passTypeMap[form.passType],
-      valid_from: toDateOnly(now),
-      valid_until: toDateOnly(validUntil),
+      valid_from: validFromStr,
+      valid_until: validUntilStr,
       status: 'active',
       trips_used: 0,
       amount_saved: 0
@@ -236,12 +260,56 @@ async function pay() {
       return
     }
 
-    statusText.value = 'Payment successful! Your pass is active. Redirecting…'
-    statusClass.value = 'status-on'
+    let emailSent = false
 
-    setTimeout(() => {
-      router.push('/pass')
-    }, 1600)
+    try {
+      const response = await supabase.functions.invoke(
+          'send-payment-email',
+          {
+            body: {
+              email: session.user.email,
+              passType: passTypeMap[form.passType],
+              route: routeLabel.value,
+              validFrom: validFromStr,
+              validUntil: validUntilStr,
+              amount: selectedPrice.value
+            }
+          }
+      )
+
+      console.log('FULL FUNCTION RESPONSE:', response)
+
+      if (response.error) {
+        console.error('FUNCTION ERROR:', response.error)
+
+        statusText.value =
+            'Payment successful, but email failed. Check browser console.'
+        statusClass.value = 'status-error'
+      } else {
+        emailSent = true
+
+        statusText.value =
+            'Payment successful! Confirmation email sent.'
+        statusClass.value = 'status-on'
+      }
+    } catch (emailErr) {
+      console.error('EMAIL INVOKE FAILED:', emailErr)
+
+      statusText.value =
+          'Payment successful, but could not send email.'
+      statusClass.value = 'status-error'
+    }
+
+    if (emailSent) {
+      setTimeout(() => {
+        router.push('/pass')
+      }, 1800)
+    } else {
+      setTimeout(() => {
+        router.push('/pass')
+      }, 4000)
+    }
+
   } catch (err) {
     console.error(err)
     statusText.value = 'Something went wrong. Please try again.'
@@ -253,6 +321,15 @@ async function pay() {
 </script>
 
 <style scoped>
+* {
+  box-sizing: border-box;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
 .payment-page {
   padding-top: 40px;
   padding-bottom: 48px;
@@ -290,7 +367,7 @@ async function pay() {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  font-color: #1b2a52;
+  color: #1b2a52;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 6px;
@@ -298,19 +375,22 @@ async function pay() {
 
 .payment-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
   align-items: start;
-  max-width: 900px;
+  width: 100%;
 }
 
 .form-card,
 .summary-card {
   padding: 28px 26px;
   background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 45%, var(--green-600) 100%);
-
 }
-
+.form-card,
+.summary-card {
+  width: 100%;
+  box-sizing: border-box;
+}
 .card-title {
   font-size: 18px;
   font-weight: 700;
@@ -406,9 +486,95 @@ async function pay() {
   border-radius: 4px;
 }
 
-@media (max-width: 820px) {
+/* Mobile improvements */
+@media (max-width: 768px) {
+  .payment-page {
+    padding: 20px 12px;
+  }
+
+  .payment-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-card,
+  .summary-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .page-head h1 {
+    font-size: 24px;
+  }
+
+  .page-sub {
+    font-size: 13px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .summary-row strong {
+    max-width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-page {
+    padding-top: 24px;
+    padding-bottom: 32px;
+  }
+  .form-card,
+  .summary-card {
+    padding: 20px 18px;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+  .page-head h1 {
+    font-size: 24px;
+  }
+}
+@media (max-width: 1024px) {
   .payment-layout {
     grid-template-columns: 1fr;
   }
+
+  .summary-card {
+    order: -1;
+  }
+}
+@media (max-width: 480px) {
+  .page-head h1 {
+    font-size: 22px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .field input,
+  .field select {
+    font-size: 16px;
+  }
+}
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 </style>

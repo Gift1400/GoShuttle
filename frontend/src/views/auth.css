@@ -265,8 +265,9 @@
 }
 
 .logo-image {
-  height: 115px;
   width: auto;
+  height: 115px;
+  max-width: 100%;
   object-fit: contain;
   border-radius: 25px;
 }
