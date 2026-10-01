@@ -172,9 +172,22 @@ async function loadCurrentPosition() {
   const currentPos = coordinates[coordinates.length - 1]
   const pointCount = coordinates.length
 
-  // Update marker only if it moved enough (≥ 20 m)
+  const busIcon = L.divIcon({
+    className: 'bus-marker',
+    html: `
+    <div class="bus-pin">
+      <svg viewBox="0 0 24 24" width="28" height="28">
+        <path fill="#16a34a" d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-5H6V6h12v6z"/>
+      </svg>
+    </div>
+  `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -36]
+  })
+
   if (!busMarker) {
-    busMarker = L.marker(currentPos)
+    busMarker = L.marker(currentPos, { icon: busIcon })
         .addTo(map)
         .bindPopup(`${bus.value.number} • ${bus.value.status}`)
         .openPopup()
@@ -187,7 +200,6 @@ async function loadCurrentPosition() {
     busMarker.setPopupContent(`${bus.value.number} • ${bus.value.status}`)
   }
 
-  // Only one point
   if (pointCount < 2) {
     if (!hasFittedBounds) {
       map.setView(currentPos, 15)
@@ -197,14 +209,12 @@ async function loadCurrentPosition() {
     return
   }
 
-  // No new points → marker already handled, stop
   if (pointCount === lastPointCount && routingControl) {
     return
   }
 
   lastPointCount = pointCount
 
-  // History dots
   stopMarkers.forEach(m => map.removeLayer(m))
   stopMarkers = []
 
@@ -223,7 +233,6 @@ async function loadCurrentPosition() {
     stopMarkers.push(circle)
   })
 
-  // Rebuild route only when point count changed
   if (routingControl) {
     map.removeControl(routingControl)
     routingControl = null
@@ -502,10 +511,11 @@ onUnmounted(() => {
 
 .map-container {
   width: 100%;
-  height: 420px;
+  min-height: 260px;
+  height: 50vh;
+  max-height: 500px;
   border-radius: 14px;
   overflow: hidden;
-
 }
 
 @media (max-width: 820px) {
@@ -515,5 +525,152 @@ onUnmounted(() => {
   .map-container {
     height: 320px;
   }
+}
+@media (max-width: 1024px) {
+
+  .track-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-card,
+  .info-card {
+    width: 100%;
+  }
+
+  .map-container {
+    height: 420px;
+  }
+}
+@media (max-width: 768px) {
+
+  .page-head {
+    margin-bottom: 20px;
+  }
+
+  .page-head h1 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 24px;
+  }
+
+  .track-grid {
+    gap: 16px;
+  }
+
+  .info-card {
+    padding: 20px;
+  }
+
+  .map-card {
+    padding: 16px;
+  }
+
+  .map-container {
+    height: 350px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+}
+@media (max-width: 600px) {
+
+  .page-head h1 {
+    font-size: 22px;
+  }
+
+  .back-link {
+    font-size: 12px;
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 0;
+  }
+
+  .capacity-top {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .map-container {
+    height: 300px;
+  }
+
+  .live-pill {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+}
+@media (max-width: 480px) {
+
+  .page-head h1 {
+    font-size: 20px;
+  }
+
+  .info-card {
+    padding: 16px;
+  }
+
+  .map-card {
+    padding: 14px;
+  }
+
+  .map-container {
+    height: 260px;
+    border-radius: 10px;
+  }
+
+  .info-label,
+  .info-value {
+    font-size: 13px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+
+.map-card,
+.info-card {
+  width: 100%;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+/* Custom bus marker */
+.bus-marker {
+  background: transparent;
+  border: none;
+}
+
+.bus-pin {
+  width: 36px;
+  height: 36px;
+  background: white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  border: 2px solid #16a34a;
+}
+
+.bus-pin svg {
+  transform: rotate(45deg);
 }
 </style>
