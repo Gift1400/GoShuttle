@@ -67,8 +67,6 @@ import { onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import 'leaflet-routing-machine'
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import { supabase } from '../supabaseClient'
 
 const route = useRoute()
@@ -133,11 +131,16 @@ watch(
 
 let map = null
 let busMarker = null
-let routingControl = null
+let trail = null
+let startMarker = null
 let refreshInterval = null
-let stopMarkers = []
 let hasFittedBounds = false
-let lastPointCount = 0
+let trackingToken = 0
+let lastRouteKey = ''
+let routedCoords = null
+
+const MAX_ACCURACY_M = 50
+const MAX_SPEED_MPS = 35 // ~125 km/h; faster = GPS glitch
 
 function distanceMetres(lat1, lng1, lat2, lng2) {
   const R = 6371000
@@ -150,191 +153,168 @@ function distanceMetres(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-async function loadCurrentPosition() {
-  if (!map) return
-
-  const busId = bus.value.bus_id
-  const routeId = bus.value.route_id
-
-  const { data, error } = await supabase
-      .from('live_trip')
-      .select('lat,lng')
-      .eq('bus_id', busId)
-      .eq('route_id', routeId)
-      .order('updated_at', { ascending: true })
-
-  if (error || !data || data.length === 0) {
-    console.error('Could not load live position:', error)
-    return
+function cleanPoints(rows) {
+  const out = []
+  for (const p of rows) {
+    // manual updates have no accuracy value
+    const manual = p.accuracy == null
+    if (!manual && p.accuracy > MAX_ACCURACY_M) continue
+    const last = out[out.length - 1]
+    if (last) {
+      const d = distanceMetres(last.lat, last.lng, p.lat, p.lng)
+      if (d < 5) continue // standing-still jitter / duplicate
+      // speed check only between two GPS points; typed-in points are
+      // entered seconds apart but can be far apart on the map
+      if (!manual && last.accuracy != null) {
+        const dt = (new Date(p.updated_at) - new Date(last.updated_at)) / 1000
+        if (dt > 0 && d / dt > MAX_SPEED_MPS) continue // teleport
+      }
+    }
+    out.push(p)
   }
+  return out
+}
 
-  const coordinates = data.map(p => L.latLng(p.lat, p.lng))
-  const currentPos = coordinates[coordinates.length - 1]
-  const pointCount = coordinates.length
-
-  const busIcon = L.divIcon({
-    className: 'bus-marker',
-    html: `
+const busIcon = L.divIcon({
+  className: 'bus-marker',
+  html: `
     <div class="bus-pin">
       <svg viewBox="0 0 24 24" width="28" height="28">
         <path fill="#16a34a" d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-5H6V6h12v6z"/>
       </svg>
     </div>
   `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -36]
-  })
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -36]
+})
+
+function clearLayers() {
+  if (!map) return
+  if (busMarker) { map.removeLayer(busMarker); busMarker = null }
+  if (trail) { map.removeLayer(trail); trail = null }
+  if (startMarker) { map.removeLayer(startMarker); startMarker = null }
+  hasFittedBounds = false
+  lastRouteKey = ''
+  routedCoords = null
+}
+
+function routeKey(coordinates) {
+  return coordinates
+      .slice(-25)
+      .map(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`)
+      .join('|')
+}
+
+// Ask OSRM for the driving route through the points so the line follows streets.
+// Only called when the points change, so the 10 s refresh doesn't spam the server.
+async function snapToRoads(coordinates, key, token) {
+  if (key === lastRouteKey) return
+
+  const path = coordinates
+      .slice(-25)
+      .map(p => `${p.lng},${p.lat}`)
+      .join(';')
+
+  try {
+    const res = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`
+    )
+    const json = await res.json()
+
+    // a newer startTracking() ran, or the page was left, while we were waiting
+    if (token !== trackingToken || !map || !trail) return
+    if (json.code !== 'Ok' || !json.routes?.length) return
+
+    routedCoords = json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng])
+    lastRouteKey = key
+    trail.setLatLngs(routedCoords)
+
+    // keep the bus on the road, at the end of the snapped line
+    if (busMarker) busMarker.setLatLng(routedCoords[routedCoords.length - 1])
+  } catch (err) {
+    console.warn('Road snapping failed, showing straight line:', err)
+  }
+}
+
+async function loadCurrentPosition(token) {
+  if (!map) return
+
+  const { data, error } = await supabase
+      .from('live_trip')
+      .select('lat,lng,accuracy,session_id,updated_at')
+      .eq('bus_id', bus.value.bus_id)
+      .eq('route_id', bus.value.route_id)
+      .order('updated_at', { ascending: false })
+      .limit(300)
+
+  // a newer startTracking() ran, or the page was left, while we were waiting
+  if (token !== trackingToken || !map) return
+
+  if (error) {
+    console.error('Could not load live position:', error)
+    return
+  }
+  if (!data?.length) return
+
+  const latest = data[0].session_id
+  const rows = data.filter(r => r.session_id === latest).reverse() // oldest → newest
+  const points = cleanPoints(rows)
+  if (!points.length) return
+
+  const coordinates = points.map(p => L.latLng(p.lat, p.lng))
+  const currentPos = coordinates[coordinates.length - 1]
+  const popupText = `${bus.value.number} • ${bus.value.status}`
 
   if (!busMarker) {
     busMarker = L.marker(currentPos, { icon: busIcon })
         .addTo(map)
-        .bindPopup(`${bus.value.number} • ${bus.value.status}`)
+        .bindPopup(popupText)
         .openPopup()
   } else {
-    const prev = busMarker.getLatLng()
-    const moved = distanceMetres(prev.lat, prev.lng, currentPos.lat, currentPos.lng)
-    if (moved >= 20) {
-      busMarker.setLatLng(currentPos)
-    }
-    busMarker.setPopupContent(`${bus.value.number} • ${bus.value.status}`)
+    busMarker.setLatLng(currentPos)
+    busMarker.setPopupContent(popupText)
   }
 
-  if (pointCount < 2) {
-    if (!hasFittedBounds) {
+  if (!trail) {
+    trail = L.polyline([], { color: '#1B3B73', weight: 5, opacity: 0.85 }).addTo(map)
+  }
+  const key = routeKey(coordinates)
+  const haveRoute = key === lastRouteKey && routedCoords
+  trail.setLatLngs(haveRoute ? routedCoords : coordinates) // straight line until snapped
+  if (haveRoute) busMarker.setLatLng(routedCoords[routedCoords.length - 1])
+  if (coordinates.length > 1) snapToRoads(coordinates, key, token)
+
+  if (!startMarker && coordinates.length > 1) {
+    startMarker = L.circleMarker(coordinates[0], {
+      radius: 7, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 0.9, weight: 5
+    }).addTo(map).bindPopup('Start')
+  } else if (startMarker) {
+    startMarker.setLatLng(coordinates[0])
+  }
+
+  if (!hasFittedBounds) {
+    if (coordinates.length > 1) {
+      map.fitBounds(trail.getBounds(), { padding: [40, 40] })
+    } else {
       map.setView(currentPos, 15)
-      hasFittedBounds = true
     }
-    lastPointCount = pointCount
-    return
+    hasFittedBounds = true
   }
-
-  if (pointCount === lastPointCount && routingControl) {
-    return
-  }
-
-  lastPointCount = pointCount
-
-  stopMarkers.forEach(m => map.removeLayer(m))
-  stopMarkers = []
-
-  coordinates.forEach((pos, index) => {
-    if (index === coordinates.length - 1) return
-    const isFirst = index === 0
-    const circle = L.circleMarker(pos, {
-      radius: isFirst ? 7 : 6,
-      color: isFirst ? '#22c55e' : '#3295EB',
-      fillColor: isFirst ? '#22c55e' : '#3295EB',
-      fillOpacity: 0.9,
-      weight: 5
-    })
-        .addTo(map)
-        .bindPopup(isFirst ? 'Start' : `Stop ${index}`)
-    stopMarkers.push(circle)
-  })
-
-  if (routingControl) {
-    map.removeControl(routingControl)
-    routingControl = null
-  }
-  if (window.routeLine) {
-    map.removeLayer(window.routeLine)
-    window.routeLine = null
-  }
-
-  const waypoints = coordinates.slice(-20)
-
-  routingControl = L.Routing.control({
-    waypoints,
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    fitSelectedRoutes: false,
-    show: false,
-    lineOptions: {
-      styles: [{ color: '#1B3B73', weight: 5, opacity: 0.85 }]
-    },
-    createMarker: () => null,
-    router: L.Routing.osrmv1({
-      serviceUrl: 'https://router.project-osrm.org/route/v1'
-    })
-  }).addTo(map)
-
-  routingControl.on('routesfound', (e) => {
-    const r = e.routes[0]
-    if (r?.coordinates?.length && !hasFittedBounds) {
-      map.fitBounds(L.latLngBounds(r.coordinates), { padding: [40, 40] })
-      hasFittedBounds = true
-    }
-  })
-
-  routingControl.on('routingerror', () => {
-    if (routingControl) {
-      map.removeControl(routingControl)
-      routingControl = null
-    }
-    window.routeLine = L.polyline(coordinates, {
-      color: '#1B3B73',
-      weight: 5,
-      opacity: 0.85
-    }).addTo(map)
-    if (!hasFittedBounds) {
-      map.fitBounds(window.routeLine.getBounds(), { padding: [40, 40] })
-      hasFittedBounds = true
-    }
-  })
 }
 
 async function startTracking() {
   if (!map) return
 
-  hasFittedBounds = false
-  lastPointCount = 0
+  const myToken = ++trackingToken
+  clearInterval(refreshInterval)
+  refreshInterval = null
+  clearLayers()
 
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-    refreshInterval = null
-  }
+  await loadCurrentPosition(myToken)
+  if (myToken !== trackingToken) return
 
-  if (busMarker) {
-    map.removeLayer(busMarker)
-    busMarker = null
-  }
-  stopMarkers.forEach(m => map.removeLayer(m))
-  stopMarkers = []
-  if (routingControl) {
-    map.removeControl(routingControl)
-    routingControl = null
-  }
-  if (window.routeLine) {
-    map.removeLayer(window.routeLine)
-    window.routeLine = null
-  }
-
-  const busId = bus.value.bus_id
-  const routeId = bus.value.route_id
-
-  const { count } = await supabase
-      .from('live_trip')
-      .select('*', { count: 'exact', head: true })
-      .eq('bus_id', busId)
-      .eq('route_id', routeId)
-
-  if (count > 0) {
-    await loadCurrentPosition()
-  }
-
-  refreshInterval = setInterval(async () => {
-    const { count } = await supabase
-        .from('live_trip')
-        .select('*', { count: 'exact', head: true })
-        .eq('bus_id', bus.value.bus_id)
-        .eq('route_id', bus.value.route_id)
-
-    if (count > 0) {
-      await loadCurrentPosition()
-    }
-  }, 10000)
+  refreshInterval = setInterval(() => loadCurrentPosition(myToken), 10000)
 }
 
 onMounted(async () => {
@@ -362,14 +342,9 @@ watch(
 )
 
 onUnmounted(() => {
-  if (refreshInterval) clearInterval(refreshInterval)
-  stopMarkers.forEach(m => map.removeLayer(m))
-  stopMarkers = []
-  if (routingControl) map.removeControl(routingControl)
-  if (window.routeLine && map) {
-    map.removeLayer(window.routeLine)
-    window.routeLine = null
-  }
+  trackingToken++
+  clearInterval(refreshInterval)
+  refreshInterval = null
   if (map) {
     map.remove()
     map = null

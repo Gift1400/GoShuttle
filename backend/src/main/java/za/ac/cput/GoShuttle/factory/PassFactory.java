@@ -1,5 +1,6 @@
 package za.ac.cput.GoShuttle.factory;
 
+import org.apache.catalina.User;
 import za.ac.cput.GoShuttle.domain.Pass;
 import za.ac.cput.GoShuttle.domain.Routes;
 import za.ac.cput.GoShuttle.util.Helper;
