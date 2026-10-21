@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import za.ac.cput.GoShuttle.util.Helper;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Entity
 @Table(name = "live_trip")
@@ -156,5 +157,16 @@ public class LiveTrip {
         public LiveTrip build() {
             return new LiveTrip(this);
         }
+    }
+
+    @OneToMany(mappedBy = "liveTrip")
+    private Collection<Boarding> boarding;
+
+    public Collection<Boarding> getBoarding() {
+        return boarding;
+    }
+
+    public void setBoarding(Collection<Boarding> boarding) {
+        this.boarding = boarding;
     }
 }

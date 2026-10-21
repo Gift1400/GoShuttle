@@ -103,6 +103,20 @@ watch(selectedRoute, (value) => {
 
 let watchId = null
 
+const MAX_ACCURACY_M = 50
+const MIN_MOVE_M = 25
+const MAX_SPEED_MPS = 35 // ~125 km/h; faster is a GPS glitch
+
+const SESSION_KEY = 'goshuttle_driver_session'
+let sessionId = localStorage.getItem(SESSION_KEY)
+let lastAccepted = null
+
+function newSession() {
+  sessionId = crypto.randomUUID()
+  localStorage.setItem(SESSION_KEY, sessionId)
+  lastAccepted = null
+}
+
 function distanceMetres(lat1, lng1, lat2, lng2) {
   const R = 6371000
   const toRad = (d) => (d * Math.PI) / 180
@@ -126,43 +140,48 @@ async function startTracking() {
     watchId = null
   }
 
+  if (!sessionId) newSession()
+  lastAccepted = null
+
   statusText.value = 'Requesting permission…'
   statusClass.value = 'status-pending'
 
   watchId = navigator.geolocation.watchPosition(
       async (position) => {
-        const newLat = position.coords.latitude
-        const newLng = position.coords.longitude
-        const accuracy = position.coords.accuracy
+        const { latitude: newLat, longitude: newLng, accuracy } = position.coords
+        const now = position.timestamp
 
-        const isFirst = lat.value === null || lng.value === null
-
-        if (!isFirst) {
-          if (accuracy > 100) {
-            statusText.value = `GPS weak (±${Math.round(accuracy)} m). Waiting for better signal…`
-            statusClass.value = 'status-pending'
-            return
-          }
-
-          const dist = distanceMetres(lat.value, lng.value, newLat, newLng)
-          if (dist < 40) return
+        if (accuracy > MAX_ACCURACY_M) {
+          statusText.value = `GPS weak (±${Math.round(accuracy)} m). Waiting for better signal…`
+          statusClass.value = 'status-pending'
+          return
         }
 
+        if (lastAccepted) {
+          const dist = distanceMetres(lastAccepted.lat, lastAccepted.lng, newLat, newLng)
+          const secs = (now - lastAccepted.t) / 1000
+
+          if (dist < Math.max(MIN_MOVE_M, accuracy)) return
+
+          if (secs > 0 && dist / secs > MAX_SPEED_MPS) return
+        }
+
+        lastAccepted = { lat: newLat, lng: newLng, t: now }
         lat.value = newLat
         lng.value = newLng
         tracking.value = true
         statusText.value = `Sharing live location (${current.value.label}) · ±${Math.round(accuracy)} m`
         statusClass.value = 'status-on'
 
-        const { error } = await supabase
-            .from('live_trip')
-            .insert({
-              bus_id: current.value.bus_id,
-              route_id: current.value.route_id,
-              lat: lat.value,
-              lng: lng.value,
-              updated_at: new Date().toISOString()
-            })
+        const { error } = await supabase.from('live_trip').insert({
+          bus_id: current.value.bus_id,
+          route_id: current.value.route_id,
+          lat: newLat,
+          lng: newLng,
+          accuracy,
+          session_id: sessionId,
+          updated_at: new Date().toISOString()
+        })
 
         if (error) {
           console.error(error)
@@ -216,6 +235,8 @@ async function clearTrip() {
     return
   }
 
+  newSession()
+
   const count = data?.length ?? 0
   manualStatusText.value =
       count > 0
@@ -237,6 +258,8 @@ async function updateManualLocation() {
     return
   }
 
+  if (!sessionId) newSession()
+
   manualSaving.value = true
   manualStatusText.value = 'Saving…'
   manualStatusClass.value = 'status-pending'
@@ -248,6 +271,7 @@ async function updateManualLocation() {
         route_id: current.value.route_id,
         lat: Number(manualLat.value),
         lng: Number(manualLng.value),
+        session_id: sessionId,
         updated_at: new Date().toISOString()
       })
 
