@@ -5,7 +5,7 @@
 
         <section class="glass driver-card">
           <h1>Driver Live Tracking</h1>
-          <p class="subtitle">Sends your phone's GPS location to the system.</p>
+          <p class="subtitle">Sends your phone's GPS location to the system. Keep this page open and the screen on while driving.</p>
 
           <div class="field">
             <label for="routeSelect">Select route</label>
@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { supabase } from '../supabaseClient'
 
 const STORAGE_KEY = 'goshuttle_driver_route'
@@ -102,6 +102,42 @@ watch(selectedRoute, (value) => {
 })
 
 let watchId = null
+
+// Phones pause GPS updates when the screen locks or the tab is hidden.
+// A wake lock keeps the screen on while sharing.
+let wakeLock = null
+
+async function keepScreenOn() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen')
+      wakeLock.addEventListener('release', () => { wakeLock = null })
+    }
+  } catch (e) {
+    console.warn('Could not keep the screen on:', e)
+  }
+}
+
+function releaseScreen() {
+  if (wakeLock) {
+    wakeLock.release()
+    wakeLock = null
+  }
+}
+
+// The lock is dropped when the tab is hidden; take it again when the driver comes back
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible' && tracking.value && !wakeLock) {
+    keepScreenOn()
+  }
+}
+document.addEventListener('visibilitychange', onVisibilityChange)
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+  releaseScreen()
+})
 
 const MAX_ACCURACY_M = 50
 const MIN_MOVE_M = 25
@@ -142,6 +178,7 @@ async function startTracking() {
 
   if (!sessionId) newSession()
   lastAccepted = null
+  keepScreenOn()
 
   statusText.value = 'Requesting permission…'
   statusClass.value = 'status-pending'
@@ -151,6 +188,7 @@ async function startTracking() {
         const { latitude: newLat, longitude: newLng, accuracy } = position.coords
         const now = position.timestamp
 
+        // 1. reject weak fixes, including the very first one
         if (accuracy > MAX_ACCURACY_M) {
           statusText.value = `GPS weak (±${Math.round(accuracy)} m). Waiting for better signal…`
           statusClass.value = 'status-pending'
@@ -161,8 +199,10 @@ async function startTracking() {
           const dist = distanceMetres(lastAccepted.lat, lastAccepted.lng, newLat, newLng)
           const secs = (now - lastAccepted.t) / 1000
 
+          // 2. must move more than the GPS noise level
           if (dist < Math.max(MIN_MOVE_M, accuracy)) return
 
+          // 3. ignore impossible jumps
           if (secs > 0 && dist / secs > MAX_SPEED_MPS) return
         }
 
@@ -216,6 +256,7 @@ function stopTracking() {
     watchId = null
   }
   tracking.value = false
+  releaseScreen()
   statusText.value = 'Stopped sharing location'
   statusClass.value = 'status-off'
 }

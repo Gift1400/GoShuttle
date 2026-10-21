@@ -138,6 +138,8 @@ let hasFittedBounds = false
 let trackingToken = 0
 let lastRouteKey = ''
 let routedCoords = null
+let latestKey = ''
+let userMovedAt = 0
 
 const MAX_ACCURACY_M = 50
 const MAX_SPEED_MPS = 35 // ~125 km/h; faster = GPS glitch
@@ -224,6 +226,7 @@ async function snapToRoads(coordinates, key, token) {
 
     // a newer startTracking() ran, or the page was left, while we were waiting
     if (token !== trackingToken || !map || !trail) return
+    if (key !== latestKey) return // newer points arrived while OSRM was answering
     if (json.code !== 'Ok' || !json.routes?.length) return
 
     routedCoords = json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng])
@@ -232,8 +235,19 @@ async function snapToRoads(coordinates, key, token) {
 
     // keep the bus on the road, at the end of the snapped line
     if (busMarker) busMarker.setLatLng(routedCoords[routedCoords.length - 1])
+    followBus()
   } catch (err) {
     console.warn('Road snapping failed, showing straight line:', err)
+  }
+}
+
+// Keep the bus in view as it moves. Pauses for 30 s if the user drags the map.
+function followBus() {
+  if (!map || !busMarker) return
+  if (Date.now() - userMovedAt < 30000) return
+  const pos = busMarker.getLatLng()
+  if (!map.getBounds().pad(-0.25).contains(pos)) {
+    map.panTo(pos, { animate: true })
   }
 }
 
@@ -280,6 +294,7 @@ async function loadCurrentPosition(token) {
     trail = L.polyline([], { color: '#1B3B73', weight: 5, opacity: 0.85 }).addTo(map)
   }
   const key = routeKey(coordinates)
+  latestKey = key
   const haveRoute = key === lastRouteKey && routedCoords
   trail.setLatLngs(haveRoute ? routedCoords : coordinates) // straight line until snapped
   if (haveRoute) busMarker.setLatLng(routedCoords[routedCoords.length - 1])
@@ -300,6 +315,8 @@ async function loadCurrentPosition(token) {
       map.setView(currentPos, 15)
     }
     hasFittedBounds = true
+  } else {
+    followBus()
   }
 }
 
@@ -314,7 +331,7 @@ async function startTracking() {
   await loadCurrentPosition(myToken)
   if (myToken !== trackingToken) return
 
-  refreshInterval = setInterval(() => loadCurrentPosition(myToken), 10000)
+  refreshInterval = setInterval(() => loadCurrentPosition(myToken), 5000)
 }
 
 onMounted(async () => {
@@ -324,6 +341,7 @@ onMounted(async () => {
   }
 
   map = L.map('map').setView([-33.93, 18.64], 12)
+  map.on('dragstart', () => { userMovedAt = Date.now() })
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
